@@ -1,0 +1,41 @@
+# Virtual Environment
+cloak/
+venv/
+.venv/
+env/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Generated Artifacts
+*.pdf
+DESIGN.md
+
+# Editor/System
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Gemini/Agent
+.gemini/
+.planning/
+.system_generated/
+implementation_plan.md
+task.md
+walkthrough.md
