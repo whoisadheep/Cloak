@@ -1,2 +1,6 @@
 click
 reportlab
+flask
+google-genai
+rich
+python-dotenv

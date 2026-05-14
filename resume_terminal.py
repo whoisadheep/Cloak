@@ -41,22 +41,22 @@ STITCH_TOKENS = {
     },
     "palette": {
 
-        "ink":         "#1A1A2E",
-        "ink_light":   "#47464C",
-        "ink_muted":   "#78767D",
+        "ink":         "#1F2937",
+        "ink_light":   "#4B5563",
+        "ink_muted":   "#6B7280",
 
-        "rule":        "#C8C5CD",
-        "accent":      "#1A1A2E",
-        "accent_soft": "#F4F4F2",
+        "rule":        "#E5E7EB",
+        "accent":      "#3B82F6",
+        "accent_soft": "#EFF6FF",
 
-        "page":              "#F9F9F7",
-        "surface":           "#F9F9F7",
-        "surface_container": "#EEEEEC",
-        "surface_high":      "#E8E8E6",
-        "surface_highest":   "#E2E3E1",
+        "page":              "#FFFFFF",
+        "surface":           "#FFFFFF",
+        "surface_container": "#F9FAFB",
+        "surface_high":      "#F3F4F6",
+        "surface_highest":   "#E5E7EB",
 
-        "secondary":         "#5E5D68",
-        "tertiary":          "#695D3C",
+        "secondary":         "#6B7280",
+        "tertiary":          "#9CA3AF",
     },
     "typography": {
 
@@ -65,23 +65,22 @@ STITCH_TOKENS = {
         "font_bold":      "Helvetica-Bold",
         "font_oblique":   "Helvetica-Oblique",
 
-        "size_name":      24,
-        "size_title":     10,
-        "size_section":   9,
-        "size_body":      9,
-        "size_small":     8,
-        "leading_body":   13,
-        "leading_tight":  11,
+        "size_name":      28,
+        "size_title":     12,
+        "size_section":   12,
+        "size_body":      10,
+        "size_small":     9,
+        "leading_body":   15,
+        "leading_tight":  14,
     },
     "spacing": {
-
-        "margin_top":    0.75,
-        "margin_bottom": 0.75,
-        "margin_left":   0.80,
-        "margin_right":  0.80,
+        "margin_top":    0.60,
+        "margin_bottom": 0.60,
+        "margin_left":   0.65,
+        "margin_right":  0.65,
 
         "section_gap":   14,
-        "item_gap":      7,
+        "item_gap":      6,
     },
     "rules": {
         "single_column":    True,
@@ -531,6 +530,9 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
     styles = build_styles()
     P = STITCH_TOKENS["palette"]
 
+    personal = user_data.get("personal") or user_data.get("personal_info") or user_data.get("personalInfo") or user_data.get("Personal Info") or user_data
+    name = personal.get("name") or user_data.get("name", "Candidate")
+
     doc = SimpleDocTemplate(
         output_path,
         pagesize=letter,
@@ -538,15 +540,14 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
         bottomMargin=S["margin_bottom"] * inch,
         leftMargin=S["margin_left"] * inch,
         rightMargin=S["margin_right"] * inch,
-        title=f"Resume — {user_data['personal']['name']}",
-        author=user_data['personal']['name'],
+        title=f"Resume — {name}",
+        author=name,
         subject="Professional Resume",
     )
 
     story = []
-    personal = user_data["personal"]
 
-    story.append(Paragraph(personal["name"], styles["name"]))
+    story.append(Paragraph(name, styles["name"]))
     story.append(Paragraph(
         f"{personal.get('title', '')}  ·  {personal.get('location', '')}",
         styles["tagline"]
@@ -686,8 +687,42 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
             ))
         story.append(KeepTogether(cert_block))
 
-    if ats_report and ats_report.get("top_gaps"):
+    # Render any custom sections
+    standard_keys = {"personal", "personal_info", "personalInfo", "Personal Info", "name", "summary", "experience", "projects", "education", "skills", "certifications", "template"}
+    for key, value in user_data.items():
+        if key not in standard_keys and isinstance(value, list) and value:
+            custom_block = []
+            section_header(custom_block, key.replace("_", " ").title(), styles)
+            for item in value:
+                if not isinstance(item, dict): continue
+                
+                title = item.get("name") or item.get("title") or ""
+                date = item.get("year") or item.get("date") or ""
+                subtitle = item.get("subtitle") or item.get("issuer") or item.get("organization") or ""
+                
+                tbl = Table(
+                    [[Paragraph(title, styles["company"]),
+                      Paragraph(date, styles["date_line"])]],
+                    colWidths=["70%", "30%"],
+                    style=TableStyle([
+                        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                        ("LEFTPADDING", (0, 0), (-1, -1), 0),
+                        ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+                        ("TOPPADDING", (0, 0), (-1, -1), 0),
+                        ("BOTTOMPADDING", (0, 0), (-1, -1), 1),
+                    ])
+                )
+                custom_block.append(tbl)
+                if subtitle:
+                    custom_block.append(Paragraph(subtitle, styles["job_title"]))
+                
+                for bullet in item.get("bullets", []):
+                    custom_block.append(Paragraph(f"• {bullet}", styles["bullet"]))
+                custom_block.append(Spacer(1, S["item_gap"]))
+                
+            story.append(KeepTogether(custom_block))
 
+    if ats_report and ats_report.get("top_gaps"):
         pass
 
     doc.build(story, onFirstPage=draw_background, onLaterPages=draw_background)

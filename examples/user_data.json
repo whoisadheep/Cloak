@@ -1,0 +1,93 @@
+{
+  "personal": {
+    "name": "Adheep Ojha",
+    "title": "Aspiring Software Engineer",
+    "email": "whoisadheep@gmail.com",
+    "phone": "9277199206",
+    "location": "Gorakhpur, UP, India",
+    "linkedin": "linkedin.com/in/whoisadheep",
+    "github": "github.com/whoisadheep"
+  },
+  "summary": "Motivated Software Engineering enthusiast with a strong foundation in modern web development and scalable application design. Passionate about leveraging cutting-edge technologies to solve complex problems and deliver high-quality, user-centric solutions. Eager to contribute technical expertise and a fast-learning mindset to an innovative development team.",
+  "projects": [
+    {
+      "name": "Full-Stack E-Commerce Platform",
+      "link": "github.com/whoisadheep/ecommerce-app",
+      "tech": "MongoDB, Express.js, React, Node.js",
+      "bullets": [
+        "Developed a scalable e-commerce platform with secure user authentication and order management.",
+        "Integrated Stripe API for seamless payment processing and implemented dynamic cart functionality."
+      ]
+    },
+    {
+      "name": "Real-Time Task Manager",
+      "link": "github.com/whoisadheep/task-manager",
+      "tech": "React, Firebase, Tailwind CSS",
+      "bullets": [
+        "Built a responsive productivity application with real-time CRUD operations using Firebase Firestore.",
+        "Implemented user-specific data storage and responsive design for cross-device accessibility."
+      ]
+    },
+    {
+      "name": "Weather Forecasting Dashboard",
+      "link": "github.com/whoisadheep/weather-app",
+      "tech": "JavaScript, OpenWeatherMap API, CSS3",
+      "bullets": [
+        "Created a dynamic weather dashboard that fetches and displays real-time meteorological data.",
+        "Optimized API calls and implemented error handling for improved user experience."
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Buddha Institute of Technology",
+      "degree": "B.Tech",
+      "field": "Information Technology",
+      "year": "2027"
+    },
+    {
+      "institution": "Buddha Polytechnic College",
+      "degree": "Diploma",
+      "field": "Electrical Engineering",
+      "year": "2024"
+    }
+  ],
+  "skills": {
+    "Programming Languages": [
+      "JavaScript",
+      "Python",
+      "Java",
+      "C++"
+    ],
+    "Frontend": [
+      "React.js",
+      "HTML5",
+      "CSS3",
+      "Tailwind CSS"
+    ],
+    "Backend": [
+      "Node.js",
+      "Express.js",
+      "REST APIs"
+    ],
+    "Database & Tools": [
+      "MongoDB",
+      "Firebase",
+      "Git",
+      "GitHub",
+      "VS Code"
+    ]
+  },
+  "certifications": [
+    {
+      "name": "React Development Course",
+      "issuer": "GeeksforGeeks",
+      "year": "2024"
+    },
+    {
+      "name": "Python Programming Course",
+      "issuer": "GeeksforGeeks",
+      "year": "2024"
+    }
+  ]
+}

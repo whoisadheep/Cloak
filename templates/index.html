@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cloak — Resume Builder</title>
+  <meta name="description" content="Build executive-quality resumes through conversation. ATS-optimized, professionally designed.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;450;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="site-nav">
+    <div class="nav-brand">Cloak <span>v1.0</span></div>
+    <div class="nav-links">
+      <a href="https://github.com/whoisadheep/Cloak" target="_blank" rel="noopener">Source</a>
+    </div>
+  </nav>
+
+  <!-- ============================================================
+       LANDING VIEW
+       ============================================================ -->
+  <main id="view-landing" class="view active">
+    <div class="landing-inner slide-up">
+
+      <div class="landing-tag">Resume Intelligence</div>
+
+      <h1 class="landing-h1">
+        Build your resume<br>through <em>conversation</em>.
+      </h1>
+
+      <p class="landing-sub">
+        No forms, no drag-and-drop templates. Cloak has a natural conversation
+        with you, extracts every detail, and renders a polished,
+        ATS-optimized PDF in seconds.
+      </p>
+
+      <div class="landing-actions">
+        <button class="btn btn-primary" id="btn-start">
+          Start building
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button class="btn btn-secondary" id="btn-upload">
+          Upload existing data
+        </button>
+      </div>
+
+      <div class="landing-features">
+        <div class="feature-card">
+          <div class="feature-label">Approach</div>
+          <div class="feature-value">Conversational</div>
+          <div class="feature-desc">Tell your story naturally. Cloak extracts and structures everything.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-label">Parse Rate</div>
+          <div class="feature-value">95%+</div>
+          <div class="feature-desc">Engineered for applicant tracking systems from the ground up.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-label">Templates</div>
+          <div class="feature-value">5</div>
+          <div class="feature-desc">Executive to academic. Each one backed by a design system.</div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ============================================================
+       CHAT VIEW
+       ============================================================ -->
+  <section id="view-chat" class="view">
+    <div class="chat-main">
+      <div class="chat-header">
+        <button class="btn btn-ghost" id="btn-chat-back">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M10 4L6 8l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Back
+        </button>
+        <span class="chat-header-title">Building your resume</span>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="chat-header-badge" id="chat-mode-badge">Standard</span>
+          <button class="btn btn-ghost" id="btn-chat-reset" title="Start a new chat" style="padding: 4px 8px; font-size: 0.75rem;">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            New chat
+          </button>
+        </div>
+      </div>
+
+      <div class="chat-messages" id="chat-messages">
+        <!-- Messages injected by JS -->
+      </div>
+
+      <div class="typing-indicator" id="typing-indicator">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+
+      <div class="chat-input-area">
+        <div class="chat-input-wrap">
+          <textarea id="chat-input" rows="1" placeholder="Type your message..."></textarea>
+          <button id="btn-send" disabled>
+            <svg viewBox="0 0 16 16" fill="none"><path d="M3 2l10 6-10 6V2z" fill="currentColor"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <aside class="preview-panel">
+      <div class="preview-header">
+        <span class="preview-header-title">Live Preview</span>
+        <button class="btn btn-primary" id="btn-goto-template" style="padding: 6px 12px; font-size: 0.75rem; display: none;">Download Options</button>
+      </div>
+      <div class="preview-body" id="preview-body">
+        <div class="preview-empty" id="preview-empty">
+          Your resume data will appear here as the conversation progresses.
+        </div>
+        <div id="preview-content" style="display:none;"></div>
+      </div>
+    </aside>
+  </section>
+
+  <!-- ============================================================
+       TEMPLATE VIEW
+       ============================================================ -->
+  <section id="view-template" class="view">
+    <div class="template-inner slide-up">
+      <div style="margin-bottom: 16px;">
+        <button class="btn btn-ghost" id="btn-template-back" style="padding-left:0;">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M10 4L6 8l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Back to Chat
+        </button>
+      </div>
+      <h2 class="template-heading">Choose a template</h2>
+      <p class="template-sub">Select a design direction for your resume, then download.</p>
+
+      <div class="template-grid" id="template-grid">
+        <!-- Injected by JS -->
+      </div>
+
+      <div class="ats-section">
+        <div class="ats-section-title">ATS Keyword Analysis</div>
+        <div class="ats-section-sub">Paste a job description to see how well your resume matches.</div>
+        <textarea id="jd-input" placeholder="Paste the full job description here..."></textarea>
+        <div class="ats-actions">
+          <button class="btn btn-secondary" id="btn-ats">Analyze</button>
+        </div>
+        <div class="ats-result" id="ats-result"></div>
+      </div>
+
+      <div class="download-area" style="display: flex; gap: 12px; align-items: center;">
+        <button class="btn btn-secondary" id="btn-edit-json">
+          Edit Data
+        </button>
+        <button class="btn btn-primary" id="btn-download">
+          Download PDF
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2v8M4 7l4 4 4-4M3 13h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <span class="download-status" id="download-status"></span>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============================================================
+       EDIT MODAL
+       ============================================================ -->
+  <div class="modal-overlay" id="edit-modal">
+    <div class="modal-box" style="max-width: 600px; width: 90%;">
+      <div class="modal-title">Edit Resume Data</div>
+      <div class="modal-desc" style="margin-bottom: 12px;">Modify your resume information manually before generating the PDF.</div>
+      <textarea id="edit-json-text" spellcheck="false" style="width: 100%; height: 300px; font-family: monospace; font-size: 13px; background: #000; color: #fff; border: 1px solid #333; border-radius: 6px; padding: 12px; margin-bottom: 16px; resize: vertical; box-sizing: border-box;"></textarea>
+      <div style="display: flex; gap: 12px; justify-content: flex-end;">
+        <button class="btn btn-secondary" id="btn-edit-cancel">Cancel</button>
+        <button class="btn btn-primary" id="btn-edit-save">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       UPLOAD MODAL
+       ============================================================ -->
+  <div class="modal-overlay" id="upload-modal">
+    <div class="modal-box">
+      <div class="modal-title">Upload resume data</div>
+      <div class="modal-desc">
+        Drop your <code>user_data.json</code> file here, or click to browse.
+        This should be the JSON output from a previous Cloak session.
+      </div>
+      <div class="upload-zone" id="upload-zone">
+        <div class="upload-zone-text">Click or drag a JSON file here</div>
+        <div class="upload-zone-hint">user_data.json</div>
+      </div>
+      <input type="file" id="file-input" accept=".json">
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button class="btn btn-ghost" id="btn-modal-close">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

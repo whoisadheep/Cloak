@@ -1,0 +1,44 @@
+Adheep Ojha
+Aspiring Software Engineer · Gorakhpur, UP, India
+whoisadheep@gmail.com · 9277199206 · https://www.linkedin.com/in/whoisadheep/ · https://github.com/whoisadheep
+PROFESSIONAL SUMMARY
+Motivated Software Engineering enthusiast with a strong foundation in modern web development and scalable application
+design. Passionate about leveraging cutting-edge technologies to solve complex problems and deliver high-quality,
+user-centric solutions. Eager to contribute technical expertise and a fast-learning mindset to an innovative development
+team.
+PROJECTS
+Full-Stack E-Commerce Platform
+ github.com/whoisadheep/ecommerce-app
+Tech: MongoDB, Express.js, React, Node.js
+ Developed a scalable e-commerce platform with secure user authentication and order management.
+ Integrated Stripe API for seamless payment processing and implemented dynamic cart functionality.
+Real-Time Task Manager
+ github.com/whoisadheep/task-manager
+Tech: React, Firebase, Tailwind CSS
+ Built a responsive productivity application with real-time CRUD operations using Firebase Firestore.
+ Implemented user-specific data storage and responsive design for cross-device accessibility.
+Weather Forecasting Dashboard
+ github.com/whoisadheep/weather-app
+Tech: JavaScript, OpenWeatherMap API, CSS3
+ Created a dynamic weather dashboard that fetches and displays real-time meteorological data.
+ Optimized API calls and implemented error handling for improved user experience.
+EDUCATION
+Buddha Institute of Technology
+ 2027
+B.Tech, Information Technology
+Buddha Polytechnic College
+ 2024
+Diploma, Electrical Engineering
+SKILLS
+Programming Languages: JavaScript  Python  Java  C++
+Frontend: React.js  HTML5  CSS3  Tailwind CSS
+Backend: Node.js  Express.js  REST APIs
+Database & Tools: MongoDB  Firebase  Git  GitHub  VS Code
+
+CERTIFICATIONS
+React Development Course
+ 2024
+GeeksforGeeks
+Python Programming Course
+ 2024
+GeeksforGeeks

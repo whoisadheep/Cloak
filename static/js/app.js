@@ -1,0 +1,778 @@
+/**
+ * Cloak — Frontend Application
+ * Manages view routing, chat interaction with streaming,
+ * live preview, template selection, and PDF download.
+ */
+
+(function () {
+  "use strict";
+
+  // ── State ──────────────────────────────────────────────────
+  const RATE_LIMIT_MS = 1500;       // Min 1.5 s between API calls
+  const MAX_HISTORY   = 6;          // Only send last N messages to API
+
+  const state = {
+    currentView: "landing",
+    messages: [],        // { role: 'user'|'assistant', content: string }
+    studentMode: false,
+    userData: null,       // Final collected JSON
+    livePreview: null,    // Partial JSON from live_preview tags
+    selectedTemplate: "Sovereign Executive",
+    isStreaming: false,
+    greetingSent: false,  // Prevent duplicate greeting API calls
+    lastRequestTime: 0,   // Timestamp of last API call
+    rateLimitCooldown: 0, // Cooldown timer id
+  };
+
+  const TEMPLATES = [
+    { id: "Sovereign Executive", name: "Sovereign Executive", desc: "Minimalist, architectural whitespace, navy ink.", ats: "98" },
+    { id: "Modern Tech", name: "Modern Tech", desc: "Clean grid, subtle dark accent bar, monospace details.", ats: "95" },
+    { id: "Creative Bold", name: "Creative Bold", desc: "High contrast, strong typographic hierarchy.", ats: "88" },
+    { id: "Classic Traditional", name: "Classic Traditional", desc: "Maximum ATS safety, zero decoration.", ats: "100" },
+    { id: "Academic Research", name: "Academic Research", desc: "Publications section, institution-first layout.", ats: "92" },
+  ];
+
+  // ── DOM refs ───────────────────────────────────────────────
+  const $ = (sel) => document.querySelector(sel);
+  const views = {
+    landing:  $("#view-landing"),
+    chat:     $("#view-chat"),
+    template: $("#view-template"),
+  };
+
+  const chatMessages  = $("#chat-messages");
+  const chatInput     = $("#chat-input");
+  const btnSend       = $("#btn-send");
+  const typingEl      = $("#typing-indicator");
+  const previewBody   = $("#preview-content");
+  const previewEmpty  = $("#preview-empty");
+  const modeBadge     = $("#chat-mode-badge");
+  const templateGrid  = $("#template-grid");
+  const atsResult     = $("#ats-result");
+  const downloadStatus = $("#download-status");
+
+  // ── State Persistence ──────────────────────────────────────
+  function saveState() {
+    const toSave = {
+      currentView: state.currentView,
+      messages: state.messages,
+      studentMode: state.studentMode,
+      userData: state.userData,
+      livePreview: state.livePreview,
+      selectedTemplate: state.selectedTemplate,
+      greetingSent: state.greetingSent
+    };
+    localStorage.setItem("cloak_state", JSON.stringify(toSave));
+  }
+
+  function loadState() {
+    try {
+      const saved = localStorage.getItem("cloak_state");
+      if (!saved) return false;
+      const parsed = JSON.parse(saved);
+      
+      state.currentView = parsed.currentView || "landing";
+      state.messages = parsed.messages || [];
+      state.studentMode = !!parsed.studentMode;
+      state.userData = parsed.userData || null;
+      state.livePreview = parsed.livePreview || null;
+      state.selectedTemplate = parsed.selectedTemplate || "Sovereign Executive";
+      state.greetingSent = !!parsed.greetingSent;
+
+      if (state.studentMode) {
+        modeBadge.textContent = "Student";
+        modeBadge.style.background = "rgba(74,222,128,.1)";
+        modeBadge.style.color = "#4ADE80";
+      }
+
+      chatMessages.innerHTML = "";
+      state.messages.forEach(msg => {
+        appendMessage(msg.role, msg.content);
+      });
+
+      if (state.livePreview) {
+        renderPreview(state.livePreview);
+      }
+      if (state.userData) {
+        $("#btn-goto-template").style.display = "block";
+      }
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // ── View Management ────────────────────────────────────────
+  function showView(name, skipSave = false) {
+    Object.values(views).forEach((v) => v.classList.remove("active"));
+    views[name].classList.add("active");
+    state.currentView = name;
+
+    if (!skipSave) saveState();
+
+    if (name === "chat" && !state.greetingSent) {
+      sendInitialGreeting();
+    }
+  }
+
+  // ── Landing Handlers ──────────────────────────────────────
+  $("#btn-start").addEventListener("click", () => showView("chat"));
+
+  $("#btn-upload").addEventListener("click", () => {
+    $("#upload-modal").classList.add("visible");
+  });
+
+  // Edit Modal logic
+  const editModal = document.getElementById("edit-modal");
+  const editJsonText = document.getElementById("edit-json-text");
+  
+  document.getElementById("btn-edit-json").addEventListener("click", () => {
+    editJsonText.value = JSON.stringify(state.userData, null, 2);
+    editModal.classList.add("visible");
+  });
+
+  document.getElementById("btn-edit-cancel").addEventListener("click", () => {
+    editModal.classList.remove("visible");
+  });
+
+  document.getElementById("btn-edit-save").addEventListener("click", () => {
+    try {
+      state.userData = JSON.parse(editJsonText.value);
+      saveState();
+      editModal.classList.remove("visible");
+      renderPreview(state.userData);
+      
+      const btn = document.getElementById("btn-edit-save");
+      const origText = btn.textContent;
+      btn.textContent = "Saved!";
+      setTimeout(() => { btn.textContent = origText; }, 2000);
+    } catch (err) {
+      alert("Invalid JSON format. Please fix any syntax errors before saving.");
+    }
+  });
+
+  $("#btn-modal-close").addEventListener("click", () => {
+    $("#upload-modal").classList.remove("visible");
+  });
+  $("#upload-modal").addEventListener("click", (e) => {
+    if (e.target === $("#upload-modal")) {
+      $("#upload-modal").classList.remove("visible");
+    }
+  });
+
+  // File upload
+  const uploadZone = $("#upload-zone");
+  const fileInput  = $("#file-input");
+
+  uploadZone.addEventListener("click", () => fileInput.click());
+  uploadZone.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    uploadZone.style.borderColor = "var(--accent)";
+    uploadZone.style.background = "var(--accent-dim)";
+  });
+  uploadZone.addEventListener("dragleave", () => {
+    uploadZone.style.borderColor = "";
+    uploadZone.style.background = "";
+  });
+  uploadZone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    uploadZone.style.borderColor = "";
+    uploadZone.style.background = "";
+    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener("change", () => {
+    if (fileInput.files.length) handleFile(fileInput.files[0]);
+  });
+
+  function handleFile(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        state.userData = data;
+        saveState();
+        $("#upload-modal").classList.remove("visible");
+        renderTemplateGrid();
+        showView("template");
+      } catch {
+        alert("Invalid JSON file. Please upload a valid user_data.json.");
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  // ── Chat ──────────────────────────────────────────────────
+  $("#btn-chat-back").addEventListener("click", () => showView("landing"));
+  $("#btn-template-back").addEventListener("click", () => showView("chat"));
+  $("#btn-goto-template").addEventListener("click", () => { renderTemplateGrid(); showView("template"); });
+  
+  $("#btn-chat-reset").addEventListener("click", () => {
+    if (confirm("Are you sure you want to clear this chat and start completely fresh?")) {
+      localStorage.removeItem("cloak_state");
+      location.reload();
+    }
+  });
+
+  chatInput.addEventListener("input", () => {
+    chatInput.style.height = "auto";
+    chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + "px";
+    btnSend.disabled = !chatInput.value.trim() || state.isStreaming;
+  });
+
+  chatInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      if (!btnSend.disabled) sendMessage();
+    }
+  });
+
+  btnSend.addEventListener("click", sendMessage);
+
+  function sendInitialGreeting() {
+    if (state.greetingSent) return; // Guard: never fire twice
+    state.greetingSent = true;
+
+    const greetMsg = "Hi, I'd like to build my resume.";
+    appendMessage("user", greetMsg);
+    state.messages.push({ role: "user", content: greetMsg });
+    saveState();
+    streamResponse();
+  }
+
+  function sendMessage() {
+    const text = chatInput.value.trim();
+    if (!text || state.isStreaming) return;
+
+    appendMessage("user", text);
+    state.messages.push({ role: "user", content: text });
+    saveState();
+
+    chatInput.value = "";
+    chatInput.style.height = "auto";
+    btnSend.disabled = true;
+
+    streamResponse();
+  }
+
+  function appendMessage(role, content) {
+    const wrapper = document.createElement("div");
+    wrapper.className = `msg msg-${role}`;
+
+    const label = document.createElement("div");
+    label.className = "msg-label";
+    label.textContent = role === "user" ? "You" : "Cloak";
+
+    const bubble = document.createElement("div");
+    bubble.className = "msg-bubble";
+
+    if (role === "assistant") {
+      bubble.innerHTML = renderMarkdown(content);
+    } else {
+      bubble.textContent = content;
+    }
+
+    wrapper.appendChild(label);
+    wrapper.appendChild(bubble);
+    chatMessages.appendChild(wrapper);
+    scrollChat();
+
+    return bubble;
+  }
+
+  function scrollChat() {
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  async function streamResponse() {
+    // ── Rate-limit guard ──────────────────────────────────────
+    const now = Date.now();
+    const elapsed = now - state.lastRequestTime;
+    if (elapsed < RATE_LIMIT_MS) {
+      const waitMs = RATE_LIMIT_MS - elapsed;
+      // Silently delay instead of showing a scary error card
+      await new Promise(r => setTimeout(r, waitMs));
+      state.lastRequestTime = Date.now();
+    }
+    state.lastRequestTime = now;
+
+    state.isStreaming = true;
+    btnSend.disabled = true;
+    typingEl.classList.add("visible");
+    scrollChat();
+
+    // Create assistant bubble for streaming
+    const bubble = appendMessage("assistant", "");
+    let accumulated = "";
+
+    // Only send the last N messages to keep token usage low
+    const trimmedMessages = state.messages.slice(-MAX_HISTORY);
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: trimmedMessages,
+          student_mode: state.studentMode,
+        }),
+      });
+
+      if (!res.ok) {
+        let errMsg = "Could not connect to Cloak. Please try again.";
+        try { const err = await res.json(); errMsg = err.error || errMsg; } catch {}
+        bubble.innerHTML = errorCard(errMsg);
+        state.isStreaming = false;
+        typingEl.classList.remove("visible");
+        return;
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const payload = line.slice(6);
+          let parsed;
+          try { parsed = JSON.parse(payload); } catch { continue; }
+
+          if (parsed.type === "text") {
+            accumulated += parsed.content;
+            bubble.innerHTML = renderMarkdown(stripTags(accumulated));
+            scrollChat();
+          }
+
+          if (parsed.type === "done") {
+            typingEl.classList.remove("visible");
+
+            // Use clean text from server
+            if (parsed.clean_text) {
+              bubble.innerHTML = renderMarkdown(parsed.clean_text);
+            }
+
+            // Update conversation history with full raw response
+            state.messages.push({ role: "assistant", content: accumulated });
+
+            // Student mode
+            if (parsed.student_detected && !state.studentMode) {
+              state.studentMode = true;
+              modeBadge.textContent = "Student";
+              modeBadge.style.background = "rgba(74,222,128,.1)";
+              modeBadge.style.color = "#4ADE80";
+            }
+
+            // Live preview
+            if (parsed.live_preview) {
+              state.livePreview = parsed.live_preview;
+              renderPreview(parsed.live_preview);
+            }
+
+            // Final JSON — wait for user approval
+            if (parsed.final_json) {
+              state.userData = parsed.final_json;
+              $("#btn-goto-template").style.display = "block";
+              
+              const finishCard = document.createElement("div");
+              finishCard.className = "chat-bubble system";
+              finishCard.innerHTML = `
+                <div style="padding: 16px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px;">
+                  <h4 style="margin: 0 0 8px 0; color: #fff;">Data Collection Complete</h4>
+                  <p style="margin: 0 0 16px 0; font-size: 0.95rem; color: #ccc;">Your resume data has been finalized! You can proceed to pick a template, or <b>continue chatting</b> to ask me to change something.</p>
+                  <button class="btn btn-primary btn-proceed" style="padding: 8px 16px; font-size: 0.9rem;">Review & Download</button>
+                </div>
+              `;
+              chatMessages.appendChild(finishCard);
+              finishCard.querySelector(".btn-proceed").addEventListener("click", () => {
+                renderTemplateGrid();
+                showView("template");
+              });
+              scrollChat();
+            }
+
+            // Save state when stream finishes completely
+            saveState();
+          }
+
+          if (parsed.type === "error") {
+            typingEl.classList.remove("visible");
+            bubble.innerHTML = errorCard(parsed.content);
+          }
+        }
+      }
+    } catch (err) {
+      bubble.innerHTML = errorCard("Connection lost. Please check your network and try again.");
+      typingEl.classList.remove("visible");
+    }
+
+    state.isStreaming = false;
+    btnSend.disabled = !chatInput.value.trim();
+  }
+
+  // ── Error Display ──────────────────────────────────────────
+  function errorCard(message) {
+    const isRateLimit = /rate limit|wait/i.test(message);
+    const retryHtml = isRateLimit
+      ? `<button class="error-retry-btn" onclick="startCooldown(this, 60)">Retry in 60 s</button>`
+      : `<button class="error-retry-btn" onclick="retryLastMessage(this)">Retry</button>`;
+
+    return `<div class="error-card">
+      <div class="error-card-title">Unable to respond</div>
+      <div class="error-card-msg">${escapeHtml(message)}</div>
+      ${retryHtml}
+    </div>`;
+  }
+
+  function cooldownCard(seconds) {
+    const id = "cd-" + Date.now();
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      if (el) el.closest(".msg").remove();
+    }, seconds * 1000);
+    return `<div class="error-card" style="border-color:var(--text-3)">
+      <div class="error-card-msg" style="color:var(--text-2)">Slow down — you can send again in <strong id="${id}">${seconds}</strong> s.</div>
+    </div>`;
+  }
+
+  // Expose cooldown helper globally for inline onclick
+  window.startCooldown = function (btn, sec) {
+    btn.disabled = true;
+    let remaining = sec;
+    btn.textContent = `Retry in ${remaining} s`;
+    const iv = setInterval(() => {
+      remaining--;
+      if (remaining <= 0) {
+        clearInterval(iv);
+        btn.textContent = "Retry";
+        btn.disabled = false;
+        btn.onclick = () => window.retryLastMessage(btn);
+      } else {
+        btn.textContent = `Retry in ${remaining} s`;
+      }
+    }, 1000);
+  };
+
+  // Expose retry helper globally
+  window.retryLastMessage = function(btn) {
+    btn.closest('.msg').remove();
+    streamResponse();
+  };
+
+  // ── Markdown (using marked.js + DOMPurify) ────────────────
+  function renderMarkdown(text) {
+    if (!text) return "";
+    if (typeof marked !== 'undefined' && typeof DOMPurify !== 'undefined') {
+      const rawHtml = marked.parse(text);
+      return DOMPurify.sanitize(rawHtml);
+    }
+    // Fallback if CDNs fail to load
+    let html = escapeHtml(text);
+    html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    html = html.replace(/\*(.+?)\*/g, "<em>$1</em>");
+    html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
+    html = html.replace(/^[\-\*] (.+)$/gm, "<li>$1</li>");
+    html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, "<ul>$1</ul>");
+    html = html.replace(/^\d+\. (.+)$/gm, "<li>$1</li>");
+    html = html.replace(/\n\n+/g, "</p><p>");
+    html = "<p>" + html + "</p>";
+    html = html.replace(/<p><\/p>/g, "");
+    return html;
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function stripTags(text) {
+    return text
+      .replace(/<live_preview>[\s\S]*?(?:<\/live_preview>|$)/g, "")
+      .replace(/CLOAK_JSON_START[\s\S]*?(?:CLOAK_JSON_END|$)/g, "")
+      .trim();
+  }
+
+  // ── Preview Panel ─────────────────────────────────────────
+  function renderPreview(data) {
+    if (!data) return;
+    previewEmpty.style.display = "none";
+    previewBody.style.display = "block";
+
+    let html = `<div class="true-preview-paper">`;
+
+    if (data.personal) {
+      html += `<div class="tp-header">
+        <div class="tp-name">${escapeHtml(data.personal.name || 'Your Name')}</div>
+        <div class="tp-contact">`;
+      const contact = [];
+      if (data.personal.email) contact.push(escapeHtml(data.personal.email));
+      if (data.personal.phone) contact.push(escapeHtml(data.personal.phone));
+      if (data.personal.location) contact.push(escapeHtml(data.personal.location));
+      if (data.personal.linkedin) contact.push(escapeHtml(data.personal.linkedin));
+      if (data.personal.github) contact.push(escapeHtml(data.personal.github));
+      if (data.personal.portfolio) contact.push(escapeHtml(data.personal.portfolio));
+      html += contact.join(' • ') + `</div></div>`;
+    }
+
+    if (data.summary) {
+      html += `<div class="tp-section">
+        <div class="tp-section-title">Professional Summary</div>
+        <div class="tp-summary">${escapeHtml(data.summary)}</div>
+      </div>`;
+    }
+
+    if (data.experience && data.experience.length) {
+      html += `<div class="tp-section">
+        <div class="tp-section-title">Experience</div>`;
+      data.experience.forEach(e => {
+        html += `<div class="tp-item">
+          <div class="tp-item-header">
+            <span class="tp-item-title">${escapeHtml(e.company || '')}</span>
+            <span class="tp-item-date">${escapeHtml(e.start || '')} - ${escapeHtml(e.end || '')}</span>
+          </div>
+          <div class="tp-item-sub">${escapeHtml(e.title || '')}${e.location ? ' | ' + escapeHtml(e.location) : ''}</div>
+          <ul class="tp-bullets">`;
+        if (e.bullets && Array.isArray(e.bullets)) {
+          e.bullets.forEach(b => {
+            html += `<li>${escapeHtml(b)}</li>`;
+          });
+        }
+        html += `</ul></div>`;
+      });
+      html += `</div>`;
+    }
+
+    if (data.projects && data.projects.length) {
+      html += `<div class="tp-section">
+        <div class="tp-section-title">Projects</div>`;
+      data.projects.forEach(p => {
+        html += `<div class="tp-item">
+          <div class="tp-item-header">
+            <span class="tp-item-title">${escapeHtml(p.name || '')}</span>
+            <span class="tp-item-date">${escapeHtml(p.date || '')}</span>
+          </div>
+          <div class="tp-item-sub">${escapeHtml(p.tech || '')}</div>
+          <ul class="tp-bullets">`;
+        if (p.bullets && Array.isArray(p.bullets)) {
+          p.bullets.forEach(b => {
+            html += `<li>${escapeHtml(b)}</li>`;
+          });
+        }
+        html += `</ul></div>`;
+      });
+      html += `</div>`;
+    }
+
+    if (data.education && data.education.length) {
+      html += `<div class="tp-section">
+        <div class="tp-section-title">Education</div>`;
+      data.education.forEach(e => {
+        html += `<div class="tp-item">
+          <div class="tp-item-header">
+            <span class="tp-item-title">${escapeHtml(e.institution || '')}</span>
+            <span class="tp-item-date">${escapeHtml(e.year || '')}</span>
+          </div>
+          <div class="tp-item-sub">${escapeHtml(e.degree || '')}${e.gpa ? ' | GPA: ' + escapeHtml(e.gpa) : ''}</div>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+
+    if (data.skills && Object.keys(data.skills).length) {
+      html += `<div class="tp-section">
+        <div class="tp-section-title">Skills</div>
+        <div class="tp-skills">`;
+      for (const [cat, list] of Object.entries(data.skills)) {
+        const items = Array.isArray(list) ? list.join(", ") : list;
+        html += `<div class="tp-skill-line"><strong>${escapeHtml(cat)}:</strong> ${escapeHtml(items)}</div>`;
+      }
+      html += `</div></div>`;
+    }
+
+    if (data.certifications && data.certifications.length) {
+      html += `<div class="tp-section">
+        <div class="tp-section-title">Certifications</div>`;
+      data.certifications.forEach(c => {
+        html += `<div class="tp-item">
+          <div class="tp-item-header">
+            <span class="tp-item-title">${escapeHtml(c.name || '')}</span>
+            <span class="tp-item-date">${escapeHtml(c.year || '')}</span>
+          </div>
+          <div class="tp-item-sub">${escapeHtml(c.issuer || '')}</div>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+
+    // Render any custom sections
+    const standardKeys = ["personal", "summary", "experience", "projects", "education", "skills", "certifications", "template"];
+    for (const key of Object.keys(data)) {
+      if (!standardKeys.includes(key) && Array.isArray(data[key]) && data[key].length) {
+        html += `<div class="tp-section">
+          <div class="tp-section-title">${escapeHtml(capitalize(key))}</div>`;
+        data[key].forEach(item => {
+          html += `<div class="tp-item">
+            <div class="tp-item-header">
+              <span class="tp-item-title">${escapeHtml(item.name || item.title || '')}</span>
+              <span class="tp-item-date">${escapeHtml(item.year || item.date || '')}</span>
+            </div>
+            <div class="tp-item-sub">${escapeHtml(item.subtitle || item.issuer || item.organization || '')}</div>
+            <ul class="tp-bullets">`;
+          if (item.bullets && Array.isArray(item.bullets)) {
+            item.bullets.forEach(b => {
+              html += `<li>${escapeHtml(b)}</li>`;
+            });
+          }
+          html += `</ul></div>`;
+        });
+        html += `</div>`;
+      }
+    }
+
+    html += `</div>`;
+    previewBody.innerHTML = html;
+  }
+
+  function capitalize(s) {
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  // ── Template Grid ─────────────────────────────────────────
+  function renderTemplateGrid() {
+    templateGrid.innerHTML = TEMPLATES.map((t) => `
+      <div class="template-card ${t.id === state.selectedTemplate ? "selected" : ""}" data-template="${t.id}">
+        <div class="template-card-check">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="template-card-name">${t.name}</div>
+        <div class="template-card-desc">${t.desc}</div>
+        <div class="template-card-ats">ATS ${t.ats}/100</div>
+      </div>
+    `).join("");
+
+    templateGrid.querySelectorAll(".template-card").forEach((card) => {
+      card.addEventListener("click", () => {
+        state.selectedTemplate = card.dataset.template;
+        saveState();
+        templateGrid.querySelectorAll(".template-card").forEach((c) => c.classList.remove("selected"));
+        card.classList.add("selected");
+      });
+    });
+  }
+
+  // ── ATS Analysis ──────────────────────────────────────────
+  $("#btn-ats").addEventListener("click", async () => {
+    const jd = $("#jd-input").value.trim();
+    if (!jd || !state.userData) return;
+
+    const btn = $("#btn-ats");
+    btn.disabled = true;
+    btn.textContent = "Analyzing...";
+
+    try {
+      const res = await fetch("/api/ats", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_data: state.userData, job_description: jd }),
+      });
+      const report = await res.json();
+
+      let scoreClass = "low";
+      if (report.coverage_pct >= 65) scoreClass = "good";
+      else if (report.coverage_pct >= 45) scoreClass = "mid";
+
+      let html = `<div class="ats-score ${scoreClass}">${report.coverage_pct}% keyword match</div>`;
+
+      if (report.gap_keywords && report.gap_keywords.length) {
+        html += `<div style="font-size:.78rem;color:var(--text-2);margin-bottom:6px;font-weight:500">Missing keywords</div><div class="ats-gaps">`;
+        report.gap_keywords.forEach(([kw, freq]) => {
+          html += `<span class="ats-gap-tag">${escapeHtml(kw)} (${freq}x)</span>`;
+        });
+        html += "</div>";
+      }
+
+      if (report.present_keywords && report.present_keywords.length) {
+        html += `<div style="font-size:.78rem;color:var(--text-2);margin-top:12px;margin-bottom:6px;font-weight:500">Matched keywords</div><div>`;
+        report.present_keywords.forEach(([kw]) => {
+          html += `<span class="ats-match-tag">${escapeHtml(kw)}</span>`;
+        });
+        html += "</div>";
+      }
+
+      atsResult.innerHTML = html;
+      atsResult.classList.add("visible");
+    } catch {
+      atsResult.innerHTML = `<p style="color:var(--error);font-size:.82rem">Failed to analyze. Check server connection.</p>`;
+      atsResult.classList.add("visible");
+    }
+
+    btn.disabled = false;
+    btn.textContent = "Analyze";
+  });
+
+  // ── PDF Download ──────────────────────────────────────────
+  $("#btn-download").addEventListener("click", async () => {
+    if (!state.userData) return;
+
+    const btn = $("#btn-download");
+    btn.disabled = true;
+    downloadStatus.textContent = "Generating PDF...";
+    downloadStatus.classList.add("visible");
+
+    try {
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_data: state.userData,
+          template: state.selectedTemplate,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Generation failed");
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+
+      const disposition = res.headers.get("Content-Disposition") || "";
+      const match = disposition.match(/filename="?(.+?)"?$/);
+      a.download = match ? match[1] : "resume.pdf";
+      a.href = url;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
+      downloadStatus.textContent = "Download started.";
+    } catch (err) {
+      downloadStatus.textContent = err.message;
+      downloadStatus.style.color = "var(--error)";
+    }
+
+    btn.disabled = false;
+    setTimeout(() => {
+      downloadStatus.classList.remove("visible");
+      downloadStatus.style.color = "";
+    }, 4000);
+  });
+
+  // ── Init ───────────────────────────────────────────────────
+  renderTemplateGrid();
+  
+  if (loadState()) {
+    showView(state.currentView, true);
+  } else {
+    showView("landing", true);
+  }
+})();

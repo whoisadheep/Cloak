@@ -9,6 +9,8 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+.env
+
 .Python
 env/
 pip-log.txt
