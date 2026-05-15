@@ -244,6 +244,49 @@
     </div>
   </div>
 
+  <!-- ============================================================
+       AD WALL MODAL
+       ============================================================ -->
+  <div class="modal-overlay" id="ad-wall-modal">
+    <div class="modal-box ad-wall-box">
+      <div class="ad-wall-header">
+        <div class="modal-title">Your resume is ready!</div>
+        <div class="modal-desc">Please wait while we prepare your download.</div>
+      </div>
+
+      <!-- Countdown Ring -->
+      <div class="ad-wall-timer">
+        <svg class="ad-timer-ring" viewBox="0 0 120 120">
+          <circle class="ad-timer-track" cx="60" cy="60" r="52" />
+          <circle class="ad-timer-fill" id="ad-timer-fill" cx="60" cy="60" r="52" />
+        </svg>
+        <span class="ad-timer-text" id="ad-timer-text">15</span>
+      </div>
+
+      <!-- Ad Slot Placeholder — replace inner HTML with your AdSense code -->
+      <div class="ad-slot" id="ad-slot">
+        <div class="ad-slot-placeholder">
+          <div class="ad-slot-label">Advertisement</div>
+          <div class="ad-slot-hint">Ad space — integrate Google AdSense here</div>
+        </div>
+        <!--
+          Replace the placeholder above with your AdSense code:
+          <ins class="adsbygoogle"
+               style="display:block"
+               data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+               data-ad-slot="XXXXXXXXXX"
+               data-ad-format="auto"></ins>
+          <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+        -->
+      </div>
+
+      <button class="btn btn-primary ad-wall-download-btn" id="btn-ad-download" disabled>
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2v8M4 7l4 4 4-4M3 13h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Waiting...
+      </button>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
   <script src="/static/js/app.js"></script>

@@ -751,14 +751,57 @@
     btn.textContent = "Analyze";
   });
 
-  // ── PDF Download ──────────────────────────────────────────
-  $("#btn-download").addEventListener("click", async () => {
+  // ── PDF Download (Ad Wall Flow) ────────────────────────────
+  const AD_WAIT_SECONDS = 15;
+  const CIRCUMFERENCE = 2 * Math.PI * 52; // matches SVG r=52
+  let adTimerInterval = null;
+
+  $("#btn-download").addEventListener("click", () => {
     if (!state.userData) return;
 
-    const btn = $("#btn-download");
+    // Reset ad wall state
+    const fill = $("#ad-timer-fill");
+    const timerText = $("#ad-timer-text");
+    const dlBtn = $("#btn-ad-download");
+    fill.style.transition = "none";
+    fill.style.strokeDashoffset = "0";
+    timerText.textContent = AD_WAIT_SECONDS;
+    dlBtn.disabled = true;
+    dlBtn.textContent = "Waiting...";
+
+    // Show ad wall
+    $("#ad-wall-modal").classList.add("visible");
+
+    // Start countdown
+    let remaining = AD_WAIT_SECONDS;
+    requestAnimationFrame(() => {
+      fill.style.transition = `stroke-dashoffset ${AD_WAIT_SECONDS}s linear`;
+      fill.style.strokeDashoffset = CIRCUMFERENCE;
+    });
+
+    adTimerInterval = setInterval(() => {
+      remaining--;
+      timerText.textContent = remaining;
+
+      if (remaining <= 0) {
+        clearInterval(adTimerInterval);
+        timerText.textContent = "✓";
+        dlBtn.disabled = false;
+        dlBtn.innerHTML = `
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2v8M4 7l4 4 4-4M3 13h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Download Now
+        `;
+      }
+    }, 1000);
+  });
+
+  // Actual download after ad wall
+  $("#btn-ad-download").addEventListener("click", async () => {
+    if (!state.userData) return;
+
+    const btn = $("#btn-ad-download");
     btn.disabled = true;
-    downloadStatus.textContent = "Generating PDF...";
-    downloadStatus.classList.add("visible");
+    btn.textContent = "Generating PDF...";
 
     try {
       const res = await fetch("/api/generate", {
@@ -788,7 +831,8 @@
       a.remove();
       URL.revokeObjectURL(url);
 
-      downloadStatus.textContent = "Download started.";
+      // Close ad wall
+      $("#ad-wall-modal").classList.remove("visible");
 
       // Show review modal 3 seconds after successful download
       if (!localStorage.getItem("cloak_reviewed")) {
@@ -797,15 +841,12 @@
         }, 3000);
       }
     } catch (err) {
-      downloadStatus.textContent = err.message;
-      downloadStatus.style.color = "var(--error)";
+      btn.textContent = err.message;
+      setTimeout(() => {
+        btn.textContent = "Retry";
+        btn.disabled = false;
+      }, 2000);
     }
-
-    btn.disabled = false;
-    setTimeout(() => {
-      downloadStatus.classList.remove("visible");
-      downloadStatus.style.color = "";
-    }, 4000);
   });
 
   // ── Reviews System ─────────────────────────────────────────
