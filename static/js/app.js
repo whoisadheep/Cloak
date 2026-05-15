@@ -226,7 +226,7 @@
         saveState();
         
         // Trigger AI response
-        streamChat();
+        streamResponse();
       } catch (err) {
         uploadBubble.remove();
         typingEl.classList.remove("visible");
