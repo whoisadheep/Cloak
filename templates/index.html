@@ -68,6 +68,20 @@
         </div>
       </div>
 
+      <!-- Reviews Section -->
+      <div class="reviews-section" id="reviews-section">
+        <div class="reviews-header">
+          <div class="reviews-tag">What Professionals Are Saying</div>
+          <button class="btn btn-ghost btn-leave-review" id="btn-leave-review">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Leave a Review
+          </button>
+        </div>
+        <div class="reviews-grid" id="reviews-grid">
+          <!-- Injected by JS -->
+        </div>
+      </div>
+
     </div>
   </main>
 
@@ -199,6 +213,34 @@
       <div style="display:flex;gap:10px;justify-content:flex-end;">
         <button class="btn btn-ghost" id="btn-modal-close">Cancel</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       REVIEW MODAL
+       ============================================================ -->
+  <div class="modal-overlay" id="review-modal">
+    <div class="modal-box" style="max-width: 480px; width: 90%;">
+      <div class="modal-title">How was your experience?</div>
+      <div class="modal-desc">Your feedback helps us improve Cloak for everyone.</div>
+
+      <div class="review-stars" id="review-stars">
+        <span class="review-star" data-value="1">&#9733;</span>
+        <span class="review-star" data-value="2">&#9733;</span>
+        <span class="review-star" data-value="3">&#9733;</span>
+        <span class="review-star" data-value="4">&#9733;</span>
+        <span class="review-star" data-value="5">&#9733;</span>
+      </div>
+      <div class="review-star-label" id="review-star-label">Select a rating</div>
+
+      <input type="text" id="review-name" class="review-input" placeholder="Your name (optional)" maxlength="60">
+      <textarea id="review-comment" class="review-textarea" placeholder="Tell us about your experience..." maxlength="500" rows="3"></textarea>
+
+      <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 16px;">
+        <button class="btn btn-ghost" id="btn-review-skip">Skip</button>
+        <button class="btn btn-primary" id="btn-review-submit">Submit Review</button>
+      </div>
+      <div class="review-feedback" id="review-feedback"></div>
     </div>
   </div>
 

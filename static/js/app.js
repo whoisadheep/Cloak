@@ -789,6 +789,13 @@
       URL.revokeObjectURL(url);
 
       downloadStatus.textContent = "Download started.";
+
+      // Show review modal 3 seconds after successful download
+      if (!localStorage.getItem("cloak_reviewed")) {
+        setTimeout(() => {
+          $("#review-modal").classList.add("visible");
+        }, 3000);
+      }
     } catch (err) {
       downloadStatus.textContent = err.message;
       downloadStatus.style.color = "var(--error)";
@@ -801,8 +808,173 @@
     }, 4000);
   });
 
+  // ── Reviews System ─────────────────────────────────────────
+  const STAR_LABELS = ["", "Terrible", "Poor", "Okay", "Great", "Amazing!"];
+  let selectedRating = 0;
+
+  // Star picker interaction
+  document.querySelectorAll("#review-stars .review-star").forEach(star => {
+    star.addEventListener("click", () => {
+      selectedRating = parseInt(star.dataset.value);
+      document.querySelectorAll("#review-stars .review-star").forEach(s => {
+        s.classList.toggle("active", parseInt(s.dataset.value) <= selectedRating);
+      });
+      $("#review-star-label").textContent = STAR_LABELS[selectedRating] || "";
+    });
+
+    star.addEventListener("mouseenter", () => {
+      const val = parseInt(star.dataset.value);
+      document.querySelectorAll("#review-stars .review-star").forEach(s => {
+        const sv = parseInt(s.dataset.value);
+        if (sv <= val) {
+          s.style.color = "var(--accent)";
+          s.style.opacity = "0.7";
+        }
+      });
+    });
+
+    star.addEventListener("mouseleave", () => {
+      document.querySelectorAll("#review-stars .review-star").forEach(s => {
+        s.style.color = "";
+        s.style.opacity = "";
+      });
+    });
+  });
+
+  // Skip button
+  $("#btn-review-skip").addEventListener("click", () => {
+    $("#review-modal").classList.remove("visible");
+  });
+
+  // Close on backdrop click
+  $("#review-modal").addEventListener("click", (e) => {
+    if (e.target === $("#review-modal")) {
+      $("#review-modal").classList.remove("visible");
+    }
+  });
+
+  // Leave a Review button on landing
+  $("#btn-leave-review").addEventListener("click", () => {
+    selectedRating = 0;
+    document.querySelectorAll("#review-stars .review-star").forEach(s => s.classList.remove("active"));
+    $("#review-star-label").textContent = "Select a rating";
+    $("#review-name").value = "";
+    $("#review-comment").value = "";
+    $("#review-feedback").textContent = "";
+    $("#review-modal").classList.add("visible");
+  });
+
+  // Submit review
+  $("#btn-review-submit").addEventListener("click", async () => {
+    if (selectedRating === 0) {
+      $("#review-feedback").textContent = "Please select a star rating.";
+      $("#review-feedback").style.color = "var(--error)";
+      return;
+    }
+    const comment = $("#review-comment").value.trim();
+    if (!comment) {
+      $("#review-feedback").textContent = "Please write a short comment.";
+      $("#review-feedback").style.color = "var(--error)";
+      return;
+    }
+
+    const btn = $("#btn-review-submit");
+    btn.disabled = true;
+    btn.textContent = "Submitting...";
+
+    try {
+      const res = await fetch("/api/reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: $("#review-name").value.trim() || "Anonymous",
+          rating: selectedRating,
+          comment: comment,
+          template: state.selectedTemplate || "",
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Submission failed");
+      }
+
+      localStorage.setItem("cloak_reviewed", "1");
+      $("#review-feedback").style.color = "var(--success)";
+      $("#review-feedback").textContent = "Thank you for your review! ✨";
+
+      setTimeout(() => {
+        $("#review-modal").classList.remove("visible");
+        fetchAndRenderReviews();
+      }, 1500);
+    } catch (err) {
+      $("#review-feedback").style.color = "var(--error)";
+      $("#review-feedback").textContent = err.message;
+    }
+
+    btn.disabled = false;
+    btn.textContent = "Submit Review";
+  });
+
+  // Relative time formatter
+  function timeAgo(dateStr) {
+    const now = new Date();
+    const d = new Date(dateStr);
+    const diffMs = now - d;
+    const mins = Math.floor(diffMs / 60000);
+    if (mins < 1) return "Just now";
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 30) return `${days}d ago`;
+    const months = Math.floor(days / 30);
+    return `${months}mo ago`;
+  }
+
+  // Render review cards
+  function renderReviewCards(reviews) {
+    const grid = $("#reviews-grid");
+    if (!reviews.length) {
+      grid.innerHTML = '<div class="reviews-empty">No reviews yet. Be the first to share your experience!</div>';
+      return;
+    }
+
+    // Show the latest 6 reviews max
+    const display = reviews.slice(0, 6);
+    grid.innerHTML = display.map(r => {
+      let stars = "";
+      for (let i = 1; i <= 5; i++) {
+        stars += `<span class="review-card-star${i > r.rating ? " empty" : ""}">&#9733;</span>`;
+      }
+      return `
+        <div class="review-card">
+          <div class="review-card-stars">${stars}</div>
+          <div class="review-card-comment">${escapeHtml(r.comment)}</div>
+          <div class="review-card-footer">
+            <span class="review-card-name">${escapeHtml(r.name || "Anonymous")}</span>
+            <span class="review-card-meta">${r.template ? escapeHtml(r.template) + " · " : ""}${timeAgo(r.date)}</span>
+          </div>
+        </div>`;
+    }).join("");
+  }
+
+  // Fetch reviews from API
+  async function fetchAndRenderReviews() {
+    try {
+      const res = await fetch("/api/reviews");
+      if (res.ok) {
+        const reviews = await res.json();
+        renderReviewCards(reviews);
+      }
+    } catch {
+      // Silently fail — reviews are non-critical
+    }
+  }
+
   // ── Init ───────────────────────────────────────────────────
   renderTemplateGrid();
+  fetchAndRenderReviews();
   
   if (loadState()) {
     showView(state.currentView, true);

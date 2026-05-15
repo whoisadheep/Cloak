@@ -507,6 +507,123 @@ a:hover { color: var(--accent-hover); }
 }
 
 /* ============================================================
+   REVIEWS SECTION
+   ============================================================ */
+.reviews-section {
+  width: 100%;
+  margin-top: 64px;
+}
+.reviews-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px;
+}
+.reviews-tag {
+  font-size: .75rem; font-weight: 500; color: var(--accent);
+  letter-spacing: .06em; text-transform: uppercase;
+  display: flex; align-items: center; gap: 8px;
+}
+.reviews-tag::before {
+  content: ''; width: 20px; height: 1px; background: var(--accent); display: block;
+}
+.btn-leave-review {
+  font-size: .75rem !important;
+  padding: 6px 14px !important;
+}
+.reviews-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+  width: 100%;
+}
+.reviews-empty {
+  grid-column: 1 / -1;
+  text-align: center; padding: 40px 20px;
+  color: var(--text-3); font-size: .85rem;
+}
+
+.review-card {
+  background: rgba(15, 15, 18, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  transition: all var(--dur) var(--ease);
+  animation: slideUpFade 0.4s var(--ease) backwards;
+}
+.review-card:nth-child(2) { animation-delay: 0.08s; }
+.review-card:nth-child(3) { animation-delay: 0.16s; }
+.review-card:hover {
+  border-color: var(--border-strong);
+  background: rgba(22, 22, 25, 0.8);
+  transform: translateY(-2px);
+}
+.review-card-stars {
+  display: flex; gap: 2px; margin-bottom: 12px;
+}
+.review-card-star {
+  color: var(--accent); font-size: 14px; line-height: 1;
+}
+.review-card-star.empty {
+  color: var(--text-3); opacity: 0.3;
+}
+.review-card-comment {
+  font-size: .84rem; color: var(--text-1); line-height: 1.6;
+  margin-bottom: 16px;
+  display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.review-card-footer {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.review-card-name {
+  font-size: .78rem; font-weight: 600; color: var(--text-0);
+}
+.review-card-meta {
+  font-size: .68rem; color: var(--text-3);
+}
+
+/* ── Review Modal ─────────────────────────────────────────── */
+.review-stars {
+  display: flex; gap: 6px; justify-content: center;
+  margin: 20px 0 8px;
+}
+.review-star {
+  font-size: 32px; color: var(--text-3); cursor: pointer;
+  transition: all 0.15s var(--ease);
+  opacity: 0.3;
+  user-select: none;
+}
+.review-star.active {
+  color: var(--accent); opacity: 1;
+  transform: scale(1.15);
+}
+.review-star:hover {
+  color: var(--accent); opacity: 0.7;
+  transform: scale(1.1);
+}
+.review-star-label {
+  text-align: center; font-size: .78rem; color: var(--text-3);
+  margin-bottom: 20px; min-height: 18px;
+}
+.review-input,
+.review-textarea {
+  width: 100%; box-sizing: border-box;
+  padding: 10px 14px;
+  background: var(--bg-1); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text-0);
+  font-family: var(--font); font-size: .85rem;
+  outline: none; transition: border-color var(--dur) var(--ease);
+}
+.review-input:focus,
+.review-textarea:focus { border-color: var(--accent); }
+.review-input { margin-bottom: 12px; }
+.review-textarea { resize: vertical; min-height: 72px; line-height: 1.5; }
+.review-input::placeholder,
+.review-textarea::placeholder { color: var(--text-3); }
+.review-feedback {
+  text-align: center; font-size: .82rem; margin-top: 12px;
+  min-height: 20px; color: var(--success);
+}
+
+/* ============================================================
    ANIMATIONS
    ============================================================ */
 @keyframes msgIn {
@@ -551,6 +668,7 @@ a:hover { color: var(--accent-hover); }
     display: flex; /* Override previous display: none if any */
   }
   .landing-features { grid-template-columns: 1fr; }
+  .reviews-grid { grid-template-columns: 1fr; }
   .site-nav { padding: 0 20px; }
   #view-landing { padding: 56px 20px 40px; height: auto; min-height: 100vh; overflow-y: auto; }
   .template-inner { padding: 32px 20px; }

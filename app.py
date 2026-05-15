@@ -9,7 +9,9 @@ import sys
 import json
 import re
 import tempfile
+import threading
 from pathlib import Path
+from datetime import datetime, timezone
 import PyPDF2
 
 from flask import (
@@ -29,6 +31,18 @@ from resume_terminal import build_pdf, analyze_ats_gaps
 app = Flask(__name__)
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+
+REVIEWS_FILE = Path(__file__).parent / "reviews.json"
+reviews_lock = threading.Lock()
+
+def load_reviews():
+    try:
+        return json.loads(REVIEWS_FILE.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
+
+def save_reviews(reviews):
+    REVIEWS_FILE.write_text(json.dumps(reviews, indent=2), encoding="utf-8")
 
 STUDENT_KEYWORDS = [
     "student", "college", "university", "no job", "fresher",
@@ -224,6 +238,43 @@ def ats_analysis():
 
     report = analyze_ats_gaps(user_data, jd_text)
     return jsonify(report)
+
+
+@app.route("/api/reviews", methods=["GET"])
+def get_reviews():
+    """Return all approved reviews, newest first."""
+    reviews = load_reviews()
+    return jsonify(reviews)
+
+
+@app.route("/api/reviews", methods=["POST"])
+def post_review():
+    """Submit a new review."""
+    data = request.json or {}
+    name = (data.get("name") or "Anonymous").strip()[:60]
+    rating = data.get("rating", 5)
+    comment = (data.get("comment") or "").strip()[:500]
+    template = (data.get("template") or "").strip()
+
+    if not isinstance(rating, int) or rating < 1 or rating > 5:
+        return jsonify({"error": "Rating must be 1-5"}), 400
+    if not comment:
+        return jsonify({"error": "Please write a short comment"}), 400
+
+    review = {
+        "name": name,
+        "rating": rating,
+        "comment": comment,
+        "template": template,
+        "date": datetime.now(timezone.utc).isoformat(),
+    }
+
+    with reviews_lock:
+        reviews = load_reviews()
+        reviews.insert(0, review)
+        save_reviews(reviews)
+
+    return jsonify({"ok": True})
 
 
 if __name__ == "__main__":
