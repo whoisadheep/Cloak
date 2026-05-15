@@ -184,21 +184,55 @@
     if (fileInput.files.length) handleFile(fileInput.files[0]);
   });
 
-  function handleFile(file) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
+  async function handleFile(file) {
+    if (file.name.endsWith('.json')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          state.userData = data;
+          saveState();
+          $("#upload-modal").classList.remove("visible");
+          renderTemplateGrid();
+          showView("template");
+        } catch {
+          alert("Invalid JSON file. Please upload a valid user_data.json.");
+        }
+      };
+      reader.readAsText(file);
+    } else {
+      $("#upload-modal").classList.remove("visible");
+      showView("chat");
+      
+      const uploadBubble = appendMessage("assistant", "Parsing your existing resume...");
+      scrollChat();
+      typingEl.classList.add("visible");
+      
+      const formData = new FormData();
+      formData.append("file", file);
+      
       try {
-        const data = JSON.parse(e.target.result);
-        state.userData = data;
+        const res = await fetch("/api/upload", { method: "POST", body: formData });
+        if (!res.ok) throw new Error("Failed to parse file.");
+        const json = await res.json();
+        
+        uploadBubble.remove();
+        
+        const extractedText = json.text;
+        const msg = `Here is my existing resume. Please extract and structure all of my information so we can build my new resume:\n\n${extractedText}`;
+        
+        appendMessage("user", "Uploaded existing resume.");
+        state.messages.push({ role: "user", content: msg });
         saveState();
-        $("#upload-modal").classList.remove("visible");
-        renderTemplateGrid();
-        showView("template");
-      } catch {
-        alert("Invalid JSON file. Please upload a valid user_data.json.");
+        
+        // Trigger AI response
+        streamChat();
+      } catch (err) {
+        uploadBubble.remove();
+        typingEl.classList.remove("visible");
+        appendMessage("assistant", "Sorry, I couldn't read that file. Let's just build it through conversation!");
       }
-    };
-    reader.readAsText(file);
+    }
   }
 
   // ── Chat ──────────────────────────────────────────────────

@@ -47,6 +47,7 @@
         <button class="btn btn-secondary" id="btn-upload">
           Upload existing data
         </button>
+        <input type="file" id="file-upload" accept=".pdf,.txt" style="display: none;">
       </div>
 
       <div class="landing-features">
@@ -188,14 +189,13 @@
     <div class="modal-box">
       <div class="modal-title">Upload resume data</div>
       <div class="modal-desc">
-        Drop your <code>user_data.json</code> file here, or click to browse.
-        This should be the JSON output from a previous Cloak session.
+        Upload your existing resume (PDF, TXT) or a previous <code>user_data.json</code> file.
       </div>
       <div class="upload-zone" id="upload-zone">
-        <div class="upload-zone-text">Click or drag a JSON file here</div>
-        <div class="upload-zone-hint">user_data.json</div>
+        <div class="upload-zone-text">Click or drag a file here</div>
+        <div class="upload-zone-hint">PDF, TXT, or JSON</div>
       </div>
-      <input type="file" id="file-input" accept=".json">
+      <input type="file" id="file-input" accept=".json,.pdf,.txt">
       <div style="display:flex;gap:10px;justify-content:flex-end;">
         <button class="btn btn-ghost" id="btn-modal-close">Cancel</button>
       </div>

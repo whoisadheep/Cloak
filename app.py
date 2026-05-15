@@ -10,6 +10,7 @@ import json
 import re
 import tempfile
 from pathlib import Path
+import PyPDF2
 
 from flask import (
     Flask, request, Response, jsonify,
@@ -149,6 +150,32 @@ def chat():
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
 
+
+@app.route("/api/upload", methods=["POST"])
+def upload_file():
+    """Extract text from an uploaded PDF or TXT file."""
+    if 'file' not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
+    
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No file selected"}), 400
+    
+    try:
+        text = ""
+        if file.filename.lower().endswith('.pdf'):
+            reader = PyPDF2.PdfReader(file)
+            for page in reader.pages:
+                text += page.extract_text() + "\n"
+        else:
+            text = file.read().decode('utf-8', errors='ignore')
+            
+        if not text.strip():
+            return jsonify({"error": "Could not extract text from file"}), 400
+            
+        return jsonify({"text": text.strip()})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/api/generate", methods=["POST"])
 def generate_pdf():
