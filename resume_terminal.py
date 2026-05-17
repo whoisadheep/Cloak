@@ -387,24 +387,8 @@ def analyze_ats_gaps(user_data: dict, jd_text: str) -> dict:
 def draw_background(canvas, doc):
     """Draw the warm matte paper background for every page."""
     canvas.saveState()
-
     canvas.setFillColor(HexColor(STITCH_TOKENS["palette"]["page"]))
     canvas.rect(0, 0, letter[0], letter[1], fill=1, stroke=0)
-
-    # For two-column templates, paint the right sidebar background
-    if not STITCH_TOKENS["rules"].get("single_column"):
-        S = STITCH_TOKENS["spacing"]
-        content_width = letter[0] - S["margin_left"] * inch - S["margin_right"] * inch
-        col_ratio = 0.62
-        right_col_x = S["margin_left"] * inch + content_width * col_ratio
-        right_col_w = letter[0] - right_col_x  # extend to page edge
-        
-        # Start below the header block (name + title + contact + rules)
-        header_top_y = letter[1] - S["margin_top"] * inch - 120
-        
-        canvas.setFillColor(HexColor("#D6E4EC"))
-        canvas.rect(right_col_x, 0, right_col_w, header_top_y, fill=1, stroke=0)
-
     canvas.restoreState()
 
 def build_styles():
@@ -837,7 +821,7 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
         main_table = Table([[left_column, right_column]], colWidths=[left_col_width, right_col_width])
         main_table.setStyle(TableStyle([
             ('VALIGN', (0,0), (-1,-1), 'TOP'),
-            # No BACKGROUND on right col — draw_background handles the sidebar
+            ('BACKGROUND', (1,0), (1,0), HexColor("#D6E4EC")),
             ('LEFTPADDING', (1,0), (1,0), 14),
             ('RIGHTPADDING', (1,0), (1,0), 8),
             ('TOPPADDING', (1,0), (1,0), 6),
