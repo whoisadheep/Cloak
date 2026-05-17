@@ -9,10 +9,11 @@ import sys
 import json
 import re
 import tempfile
-import threading
 from pathlib import Path
 from datetime import datetime, timezone
 import PyPDF2
+import psycopg2
+import psycopg2.extras
 
 from flask import (
     Flask, request, Response, jsonify,
@@ -31,18 +32,43 @@ from resume_terminal import build_pdf, analyze_ats_gaps
 app = Flask(__name__)
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+DATABASE_URL = os.environ.get("DATABASE_URL")
 
-REVIEWS_FILE = Path(__file__).parent / "reviews.json"
-reviews_lock = threading.Lock()
 
-def load_reviews():
+def get_db():
+    """Get a PostgreSQL connection."""
+    conn = psycopg2.connect(DATABASE_URL)
+    conn.autocommit = True
+    return conn
+
+
+def init_db():
+    """Create reviews table if it doesn't exist."""
+    if not DATABASE_URL:
+        print("[CLOAK] WARNING: DATABASE_URL not set — reviews will not persist.", flush=True)
+        return
     try:
-        return json.loads(REVIEWS_FILE.read_text(encoding="utf-8"))
-    except (FileNotFoundError, json.JSONDecodeError):
-        return []
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS reviews (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(60) NOT NULL DEFAULT 'Anonymous',
+                rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+                comment VARCHAR(500) NOT NULL,
+                template VARCHAR(100) DEFAULT '',
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            );
+        """)
+        cur.close()
+        conn.close()
+        print("[CLOAK] Database initialized — reviews table ready.", flush=True)
+    except Exception as e:
+        print(f"[CLOAK] DB init error: {e}", flush=True)
 
-def save_reviews(reviews):
-    REVIEWS_FILE.write_text(json.dumps(reviews, indent=2), encoding="utf-8")
+
+# Initialize database on startup
+init_db()
 
 STUDENT_KEYWORDS = [
     "student", "college", "university", "no job", "fresher",
@@ -305,9 +331,29 @@ Return the updated JSON now:"""
 
 @app.route("/api/reviews", methods=["GET"])
 def get_reviews():
-    """Return all approved reviews, newest first."""
-    reviews = load_reviews()
-    return jsonify(reviews)
+    """Return all reviews, newest first."""
+    if not DATABASE_URL:
+        return jsonify([])
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("SELECT name, rating, comment, template, created_at FROM reviews ORDER BY created_at DESC LIMIT 20")
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+        reviews = []
+        for r in rows:
+            reviews.append({
+                "name": r["name"],
+                "rating": r["rating"],
+                "comment": r["comment"],
+                "template": r["template"],
+                "date": r["created_at"].isoformat(),
+            })
+        return jsonify(reviews)
+    except Exception as e:
+        print(f"[CLOAK] DB read error: {e}", flush=True)
+        return jsonify([])
 
 
 @app.route("/api/reviews", methods=["POST"])
@@ -324,20 +370,22 @@ def post_review():
     if not comment:
         return jsonify({"error": "Please write a short comment"}), 400
 
-    review = {
-        "name": name,
-        "rating": rating,
-        "comment": comment,
-        "template": template,
-        "date": datetime.now(timezone.utc).isoformat(),
-    }
+    if not DATABASE_URL:
+        return jsonify({"error": "Database not configured"}), 500
 
-    with reviews_lock:
-        reviews = load_reviews()
-        reviews.insert(0, review)
-        save_reviews(reviews)
-
-    return jsonify({"ok": True})
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute(
+            "INSERT INTO reviews (name, rating, comment, template) VALUES (%s, %s, %s, %s)",
+            (name, rating, comment, template)
+        )
+        cur.close()
+        conn.close()
+        return jsonify({"ok": True})
+    except Exception as e:
+        print(f"[CLOAK] DB write error: {e}", flush=True)
+        return jsonify({"error": "Failed to save review"}), 500
 
 
 if __name__ == "__main__":

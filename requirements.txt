@@ -7,3 +7,4 @@ python-dotenv
 gunicorn
 anthropic
 PyPDF2
+psycopg2-binary
