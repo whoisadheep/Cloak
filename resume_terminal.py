@@ -73,8 +73,8 @@ STITCH_TOKENS = {
         "leading_tight":  14,
     },
     "spacing": {
-        "margin_top":    0.50,
-        "margin_bottom": 0.50,
+        "margin_top":    0.60,
+        "margin_bottom": 0.60,
         "margin_left":   0.65,
         "margin_right":  0.65,
 
