@@ -89,6 +89,9 @@ STITCH_TOKENS = {
         "no_line_borders":  True,
         "no_rounded_corners": True,
         "ats_safe":         True,
+        "header_alignment": TA_CENTER,
+        "header_uppercase": True,
+        "contact_font":     "Helvetica",
     }
 }
 
@@ -405,7 +408,7 @@ def build_styles():
         leading=30,
         textColor=c(P["ink"]),
         spaceAfter=2,
-        alignment=TA_CENTER,
+        alignment=STITCH_TOKENS["rules"].get("header_alignment", TA_CENTER),
     )
     styles["tagline"] = ParagraphStyle(
         "tagline",
@@ -414,15 +417,15 @@ def build_styles():
         leading=T["leading_tight"],
         textColor=c(P["ink_muted"]),
         spaceAfter=3,
-        alignment=TA_CENTER,
+        alignment=STITCH_TOKENS["rules"].get("header_alignment", TA_CENTER),
     )
     styles["contact"] = ParagraphStyle(
         "contact",
-        fontName=T["font_primary"],
+        fontName=STITCH_TOKENS["rules"].get("contact_font", T["font_primary"]),
         fontSize=9,
         leading=12,
         textColor=c(P["ink_muted"]),
-        alignment=TA_CENTER,
+        alignment=STITCH_TOKENS["rules"].get("header_alignment", TA_CENTER),
     )
     styles["section_label"] = ParagraphStyle(
         "section_label",
@@ -526,8 +529,46 @@ def section_header(story, title, styles):
     story.append(Paragraph(title.upper(), styles["section_label"]))
     section_rule(story)
 
+def apply_template(template_name: str):
+    """Mutate STITCH_TOKENS globally to apply a specific template design."""
+    P = STITCH_TOKENS["palette"]
+    T = STITCH_TOKENS["typography"]
+    R = STITCH_TOKENS["rules"]
+
+    if template_name == "Modern Tech":
+        P["page"] = "#FFFFFF"
+        P["ink"] = "#111827"
+        P["ink_light"] = "#374151"
+        P["ink_muted"] = "#6B7280"
+        P["rule"] = "#3B82F6"
+        
+        T["font_primary"] = "Helvetica"
+        T["font_bold"] = "Helvetica-Bold"
+        T["font_oblique"] = "Courier"
+        
+        R["header_alignment"] = TA_LEFT
+        R["header_uppercase"] = False
+        R["contact_font"] = "Courier"
+    else:
+        # Default: Sovereign Executive
+        P["page"] = "#F9F9F7"
+        P["ink"] = "#1A1A2E"
+        P["ink_light"] = "#333333"
+        P["ink_muted"] = "#444444"
+        P["rule"] = "#1A1A2E"
+        
+        T["font_primary"] = "Helvetica"
+        T["font_bold"] = "Helvetica-Bold"
+        T["font_oblique"] = "Helvetica-Oblique"
+        
+        R["header_alignment"] = TA_CENTER
+        R["header_uppercase"] = True
+        R["contact_font"] = "Helvetica"
+
 def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None):
     """Render the resume PDF using Stitch design tokens."""
+    apply_template(user_data.get("template", "Sovereign Executive"))
+    
     S = STITCH_TOKENS["spacing"]
     styles = build_styles()
     P = STITCH_TOKENS["palette"]
@@ -549,7 +590,8 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
 
     story = []
 
-    story.append(Paragraph(name.upper(), styles["name"]))
+    name_str = name.upper() if STITCH_TOKENS["rules"].get("header_uppercase") else name
+    story.append(Paragraph(name_str, styles["name"]))
     story.append(Paragraph(
         f"{personal.get('title', '')}  ·  {personal.get('location', '')}",
         styles["tagline"]
