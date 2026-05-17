@@ -389,6 +389,15 @@ def draw_background(canvas, doc):
     canvas.saveState()
     canvas.setFillColor(HexColor(STITCH_TOKENS["palette"]["page"]))
     canvas.rect(0, 0, letter[0], letter[1], fill=1, stroke=0)
+
+    # Paint the right sidebar for two-column templates
+    if not STITCH_TOKENS["rules"].get("single_column"):
+        S = STITCH_TOKENS["spacing"]
+        content_width = letter[0] - S["margin_left"] * inch - S["margin_right"] * inch
+        right_col_x = S["margin_left"] * inch + content_width * 0.62
+        canvas.setFillColor(HexColor("#D6E4EC"))
+        canvas.rect(right_col_x, 0, letter[0] - right_col_x, letter[1], fill=1, stroke=0)
+
     canvas.restoreState()
 
 def build_styles():
@@ -818,16 +827,9 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
         left_col_width = content_width * col_ratio
         right_col_width = content_width * (1 - col_ratio)
         
-        # Force right column to fill the full available height
-        # so the BACKGROUND covers the entire sidebar area
-        header_height = 130
-        available_height = letter[1] - S["margin_top"] * inch - S["margin_bottom"] * inch - header_height
-        right_column.append(Spacer(1, available_height))
-        
         main_table = Table([[left_column, right_column]], colWidths=[left_col_width, right_col_width])
         main_table.setStyle(TableStyle([
             ('VALIGN', (0,0), (-1,-1), 'TOP'),
-            ('BACKGROUND', (1,0), (1,0), HexColor("#D6E4EC")),
             ('LEFTPADDING', (1,0), (1,0), 14),
             ('RIGHTPADDING', (1,0), (1,0), 8),
             ('TOPPADDING', (1,0), (1,0), 6),
@@ -838,10 +840,7 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
             ('BOTTOMPADDING', (0,0), (0,0), 0),
         ]))
         
-        frame_width = content_width
-        frame_height = available_height
-        
-        story.append(KeepInFrame(frame_width, frame_height, [main_table], mode='shrink'))
+        story.append(main_table)
 
     doc.build(story, onFirstPage=draw_background, onLaterPages=draw_background)
 
