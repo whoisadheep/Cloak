@@ -106,7 +106,7 @@ a:hover { color: var(--accent-hover); }
 /* ============================================================
    LANDING
    ============================================================ */
-#view-landing { justify-content: center; align-items: center; padding: 56px 40px 40px; overflow: hidden; height: 100vh; }
+#view-landing { justify-content: center; align-items: center; padding: 56px 40px 40px; overflow-y: auto; min-height: 100vh; }
 
 .landing-inner {
   max-width: 720px; width: 100%;
