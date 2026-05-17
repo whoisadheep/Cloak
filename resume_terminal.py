@@ -40,16 +40,15 @@ STITCH_TOKENS = {
         "version":            "1",
     },
     "palette": {
+        "ink":         "#1A1A2E",
+        "ink_light":   "#333333",
+        "ink_muted":   "#444444",
 
-        "ink":         "#1F2937",
-        "ink_light":   "#4B5563",
-        "ink_muted":   "#6B7280",
-
-        "rule":        "#E5E7EB",
+        "rule":        "#1A1A2E",
         "accent":      "#3B82F6",
         "accent_soft": "#EFF6FF",
 
-        "page":              "#FFFFFF",
+        "page":              "#F9F9F7",
         "surface":           "#FFFFFF",
         "surface_container": "#F9FAFB",
         "surface_high":      "#F3F4F6",
@@ -65,8 +64,8 @@ STITCH_TOKENS = {
         "font_bold":      "Helvetica-Bold",
         "font_oblique":   "Helvetica-Oblique",
 
-        "size_name":      28,
-        "size_title":     12,
+        "size_name":      24,
+        "size_title":     11,
         "size_section":   12,
         "size_body":      10,
         "size_small":     9,
@@ -406,6 +405,7 @@ def build_styles():
         leading=30,
         textColor=c(P["ink"]),
         spaceAfter=2,
+        alignment=TA_CENTER,
     )
     styles["tagline"] = ParagraphStyle(
         "tagline",
@@ -414,13 +414,15 @@ def build_styles():
         leading=T["leading_tight"],
         textColor=c(P["ink_muted"]),
         spaceAfter=3,
+        alignment=TA_CENTER,
     )
     styles["contact"] = ParagraphStyle(
         "contact",
         fontName=T["font_primary"],
-        fontSize=8,
-        leading=10,
+        fontSize=9,
+        leading=12,
         textColor=c(P["ink_muted"]),
+        alignment=TA_CENTER,
     )
     styles["section_label"] = ParagraphStyle(
         "section_label",
@@ -547,7 +549,7 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
 
     story = []
 
-    story.append(Paragraph(name, styles["name"]))
+    story.append(Paragraph(name.upper(), styles["name"]))
     story.append(Paragraph(
         f"{personal.get('title', '')}  ·  {personal.get('location', '')}",
         styles["tagline"]
