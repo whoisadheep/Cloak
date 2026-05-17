@@ -818,6 +818,12 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
         left_col_width = content_width * col_ratio
         right_col_width = content_width * (1 - col_ratio)
         
+        # Force right column to fill the full available height
+        # so the BACKGROUND covers the entire sidebar area
+        header_height = 130
+        available_height = letter[1] - S["margin_top"] * inch - S["margin_bottom"] * inch - header_height
+        right_column.append(Spacer(1, available_height))
+        
         main_table = Table([[left_column, right_column]], colWidths=[left_col_width, right_col_width])
         main_table.setStyle(TableStyle([
             ('VALIGN', (0,0), (-1,-1), 'TOP'),
@@ -825,17 +831,15 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
             ('LEFTPADDING', (1,0), (1,0), 14),
             ('RIGHTPADDING', (1,0), (1,0), 8),
             ('TOPPADDING', (1,0), (1,0), 6),
-            ('BOTTOMPADDING', (1,0), (1,0), 12),
+            ('BOTTOMPADDING', (1,0), (1,0), 0),
             ('LEFTPADDING', (0,0), (0,0), 0),
             ('RIGHTPADDING', (0,0), (0,0), 14),
             ('TOPPADDING', (0,0), (0,0), 0),
             ('BOTTOMPADDING', (0,0), (0,0), 0),
         ]))
         
-        # Shrink to fit if content is too tall
-        header_height = 130
         frame_width = content_width
-        frame_height = letter[1] - S["margin_top"] * inch - S["margin_bottom"] * inch - header_height
+        frame_height = available_height
         
         story.append(KeepInFrame(frame_width, frame_height, [main_table], mode='shrink'))
 
