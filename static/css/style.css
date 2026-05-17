@@ -444,6 +444,50 @@ a:hover { color: var(--accent-hover); }
   font-size: .75rem; border-radius: 4px; font-weight: 500;
 }
 
+/* Tailor result */
+.tailor-result {
+  display: none; margin-top: 16px; padding: 20px;
+  background: var(--bg-1); border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  animation: slideUpFade 0.3s var(--ease);
+}
+.tailor-result.visible { display: block; }
+.tailor-result.loading {
+  display: block;
+  background: linear-gradient(90deg, var(--bg-1) 25%, var(--bg-2) 50%, var(--bg-1) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.tailor-result-title {
+  font-size: .85rem; font-weight: 600; color: var(--accent);
+  margin-bottom: 8px;
+  display: flex; align-items: center; gap: 8px;
+}
+.tailor-result-desc {
+  font-size: .82rem; color: var(--text-2); line-height: 1.6;
+  margin-bottom: 14px;
+}
+.tailor-changes {
+  display: flex; flex-direction: column; gap: 8px;
+}
+.tailor-change-item {
+  font-size: .78rem; color: var(--text-1); line-height: 1.5;
+  padding: 8px 12px;
+  background: var(--bg-2); border-radius: var(--radius);
+  border-left: 2px solid var(--accent);
+}
+.tailor-change-label {
+  font-size: .68rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--accent); margin-bottom: 4px;
+}
+.tailor-actions {
+  display: flex; gap: 10px; margin-top: 16px;
+}
+
 .download-area {
   display: flex; align-items: center; gap: 16px;
 }
@@ -652,6 +696,11 @@ a:hover { color: var(--accent-hover); }
 }
 .fade-in { animation: fadeIn .35s var(--ease); }
 .slide-up { animation: slideUp .4s var(--ease); }
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
 
 /* ============================================================
    RESPONSIVE

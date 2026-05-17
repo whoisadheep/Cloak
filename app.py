@@ -240,6 +240,69 @@ def ats_analysis():
     return jsonify(report)
 
 
+@app.route("/api/tailor", methods=["POST"])
+def tailor_resume():
+    """Use Gemini to rewrite resume data, weaving in missing ATS keywords."""
+    data = request.json or {}
+    user_data = data.get("user_data", {})
+    jd_text = data.get("job_description", "")
+    gap_keywords = data.get("gap_keywords", [])
+
+    if not jd_text.strip():
+        return jsonify({"error": "No job description provided."}), 400
+    if not user_data:
+        return jsonify({"error": "No resume data provided."}), 400
+
+    gap_list = ", ".join(gap_keywords) if gap_keywords else "none identified"
+
+    tailor_prompt = f"""You are an expert ATS resume optimizer. You will receive a candidate's resume data as JSON and a target job description.
+
+Your task:
+1. Rewrite experience bullet points and project bullets to naturally incorporate the MISSING KEYWORDS listed below. Do NOT fabricate experience — only rephrase existing achievements to highlight relevant skills.
+2. Update the summary/objective to align with the job description's tone and priorities.
+3. If the skills section is missing any of the gap keywords that the candidate plausibly has (based on their experience), add them to the appropriate skill category.
+4. Keep all personal info, dates, company names, and degree info EXACTLY the same.
+5. Return ONLY the complete updated JSON object — no markdown, no explanation, no code fences.
+
+MISSING KEYWORDS TO INCORPORATE: {gap_list}
+
+JOB DESCRIPTION:
+{jd_text[:3000]}
+
+CURRENT RESUME JSON:
+{json.dumps(user_data, indent=2)}
+
+Return the updated JSON now:"""
+
+    client = genai.Client(api_key=GEMINI_API_KEY)
+
+    try:
+        response = client.models.generate_content(
+            model="gemini-3.1-flash-lite",
+            contents=[{"role": "user", "parts": [{"text": tailor_prompt}]}],
+            config={
+                "temperature": 0.4,
+                "max_output_tokens": 6000,
+            },
+        )
+
+        raw = response.text.strip()
+
+        # Strip markdown code fences if present
+        if raw.startswith("```"):
+            raw = re.sub(r"^```(?:json)?\s*", "", raw)
+            raw = re.sub(r"\s*```$", "", raw)
+
+        tailored = json.loads(raw)
+        return jsonify({"tailored": tailored})
+
+    except json.JSONDecodeError:
+        return jsonify({"error": "AI returned invalid JSON. Please try again."}), 500
+    except Exception as e:
+        print(f"[TAILOR ERROR] {e}", flush=True)
+        return jsonify({"error": f"Tailoring failed: {str(e)[:120]}"}), 500
+
+
 @app.route("/api/reviews", methods=["GET"])
 def get_reviews():
     """Return all approved reviews, newest first."""

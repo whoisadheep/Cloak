@@ -701,7 +701,10 @@
     });
   }
 
-  // ── ATS Analysis ──────────────────────────────────────────
+  // ── ATS Analysis + Tailoring ────────────────────────────────
+  let lastGapKeywords = [];
+  let preTailorData = null;
+
   $("#btn-ats").addEventListener("click", async () => {
     const jd = $("#jd-input").value.trim();
     if (!jd || !state.userData) return;
@@ -709,6 +712,11 @@
     const btn = $("#btn-ats");
     btn.disabled = true;
     btn.textContent = "Analyzing...";
+
+    // Reset tailor state
+    $("#btn-tailor").style.display = "none";
+    $("#tailor-result").classList.remove("visible", "loading");
+    lastGapKeywords = [];
 
     try {
       const res = await fetch("/api/ats", {
@@ -730,6 +738,10 @@
           html += `<span class="ats-gap-tag">${escapeHtml(kw)} (${freq}x)</span>`;
         });
         html += "</div>";
+
+        // Store gap keywords and show tailor button
+        lastGapKeywords = report.gap_keywords.map(([kw]) => kw);
+        $("#btn-tailor").style.display = "inline-flex";
       }
 
       if (report.present_keywords && report.present_keywords.length) {
@@ -749,6 +761,133 @@
 
     btn.disabled = false;
     btn.textContent = "Analyze";
+  });
+
+  // ── Tailor My Resume ──────────────────────────────────────
+  $("#btn-tailor").addEventListener("click", async () => {
+    const jd = $("#jd-input").value.trim();
+    if (!jd || !state.userData || !lastGapKeywords.length) return;
+
+    const btn = $("#btn-tailor");
+    const tailorResult = $("#tailor-result");
+
+    btn.disabled = true;
+    btn.innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" class="spin"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" fill="none" stroke-dasharray="28" stroke-dashoffset="8"/></svg>
+      Tailoring...
+    `;
+
+    // Save pre-tailor data for revert
+    preTailorData = JSON.parse(JSON.stringify(state.userData));
+
+    // Show shimmer loading
+    tailorResult.className = "tailor-result loading";
+    tailorResult.innerHTML = `<div style="color:var(--text-3);font-size:.82rem;text-align:center;padding:20px;">AI is rewriting your resume to match this job description...</div>`;
+
+    try {
+      const res = await fetch("/api/tailor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_data: state.userData,
+          job_description: jd,
+          gap_keywords: lastGapKeywords,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Tailoring failed");
+      }
+
+      const data = await res.json();
+      const tailored = data.tailored;
+
+      // Count what changed
+      const changes = [];
+      if (tailored.summary !== state.userData.summary) {
+        changes.push({ label: "Summary", desc: "Rewritten to align with job priorities" });
+      }
+      const oldBullets = (state.userData.experience || []).flatMap(e => e.bullets || []);
+      const newBullets = (tailored.experience || []).flatMap(e => e.bullets || []);
+      const bulletChanges = newBullets.filter((b, i) => b !== oldBullets[i]).length;
+      if (bulletChanges > 0) {
+        changes.push({ label: "Experience", desc: `${bulletChanges} bullet point${bulletChanges > 1 ? "s" : ""} optimized with target keywords` });
+      }
+      const oldProjBullets = (state.userData.projects || []).flatMap(p => p.bullets || []);
+      const newProjBullets = (tailored.projects || []).flatMap(p => p.bullets || []);
+      const projChanges = newProjBullets.filter((b, i) => b !== oldProjBullets[i]).length;
+      if (projChanges > 0) {
+        changes.push({ label: "Projects", desc: `${projChanges} bullet${projChanges > 1 ? "s" : ""} enhanced for keyword coverage` });
+      }
+      const oldSkillCount = Object.values(state.userData.skills || {}).flat().length;
+      const newSkillCount = Object.values(tailored.skills || {}).flat().length;
+      if (newSkillCount > oldSkillCount) {
+        changes.push({ label: "Skills", desc: `${newSkillCount - oldSkillCount} relevant skill${newSkillCount - oldSkillCount > 1 ? "s" : ""} added` });
+      }
+      if (!changes.length) {
+        changes.push({ label: "Content", desc: "Bullet points refined for better ATS alignment" });
+      }
+
+      // Build result HTML
+      let resultHtml = `
+        <div class="tailor-result-title">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13.5 4.5L6 12 2.5 8.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Resume Tailored Successfully
+        </div>
+        <div class="tailor-result-desc">Your resume has been optimized for this job description. Here's what changed:</div>
+        <div class="tailor-changes">
+      `;
+      changes.forEach(c => {
+        resultHtml += `<div class="tailor-change-item"><div class="tailor-change-label">${escapeHtml(c.label)}</div>${escapeHtml(c.desc)}</div>`;
+      });
+      resultHtml += `</div>
+        <div class="tailor-actions">
+          <button class="btn btn-primary" id="btn-tailor-accept">Accept Changes</button>
+          <button class="btn btn-secondary" id="btn-tailor-revert">Revert to Original</button>
+        </div>`;
+
+      // Apply tailored data temporarily for preview
+      state.userData = tailored;
+      saveState();
+      renderPreview(state.userData);
+
+      tailorResult.className = "tailor-result visible";
+      tailorResult.innerHTML = resultHtml;
+
+      // Accept button
+      $("#btn-tailor-accept").addEventListener("click", () => {
+        preTailorData = null;
+        tailorResult.innerHTML = `<div class="tailor-result-title" style="color:var(--success);">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13.5 4.5L6 12 2.5 8.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Changes applied! Your resume is now optimized for this role.
+        </div>`;
+        // Re-run ATS to show improved score
+        setTimeout(() => $("#btn-ats").click(), 500);
+      });
+
+      // Revert button
+      $("#btn-tailor-revert").addEventListener("click", () => {
+        if (preTailorData) {
+          state.userData = preTailorData;
+          preTailorData = null;
+          saveState();
+          renderPreview(state.userData);
+        }
+        tailorResult.className = "tailor-result";
+        tailorResult.innerHTML = "";
+      });
+
+    } catch (err) {
+      tailorResult.className = "tailor-result visible";
+      tailorResult.innerHTML = `<div style="color:var(--error);font-size:.82rem;">${escapeHtml(err.message)}</div>`;
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M12 2L4 14M4 2l8 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Tailor My Resume
+    `;
   });
 
   // ── PDF Download ──────────────────────────────────────────
