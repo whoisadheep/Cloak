@@ -391,18 +391,19 @@ def draw_background(canvas, doc):
     canvas.setFillColor(HexColor(STITCH_TOKENS["palette"]["page"]))
     canvas.rect(0, 0, letter[0], letter[1], fill=1, stroke=0)
 
+    # For two-column templates, paint the right sidebar background
     if not STITCH_TOKENS["rules"].get("single_column"):
         S = STITCH_TOKENS["spacing"]
         content_width = letter[0] - S["margin_left"] * inch - S["margin_right"] * inch
-        right_col_x = S["margin_left"] * inch + content_width * 0.70
-        # Right column width + padding so it aligns with the table
-        right_col_w = content_width * 0.30
+        col_ratio = 0.62
+        right_col_x = S["margin_left"] * inch + content_width * col_ratio
+        right_col_w = letter[0] - right_col_x  # extend to page edge
         
-        # Header includes: name + tagline + HR + contact row + HR + spacer
-        header_height = 175
+        # Start below the header block (name + title + contact + rules)
+        header_top_y = letter[1] - S["margin_top"] * inch - 120
         
-        canvas.setFillColor(HexColor("#C4D6E0"))
-        canvas.rect(right_col_x, 0, right_col_w, letter[1] - header_height, fill=1, stroke=0)
+        canvas.setFillColor(HexColor("#D6E4EC"))
+        canvas.rect(right_col_x, 0, right_col_w, header_top_y, fill=1, stroke=0)
 
     canvas.restoreState()
 
@@ -764,22 +765,44 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
                 )
                 edu_block.append(tbl)
             else:
-                edu_block.append(Paragraph(edu.get("year", ""), styles["date_line"]))
-                edu_block.append(Paragraph(edu["institution"], styles["company"]))
+                # Year right-aligned, then institution + degree below
+                year_str = edu.get("year", "")
+                if year_str:
+                    edu_block.append(Spacer(1, 4))
+                    edu_block.append(Paragraph(year_str, ParagraphStyle(
+                        "edu_year", fontName=T["font_bold"], fontSize=9,
+                        textColor=HexColor(P["ink"]), alignment=TA_RIGHT,
+                    )))
+                    edu_block.append(HRFlowable(width="99%", thickness=0.5, color=HexColor(P["rule"]), spaceAfter=3, spaceBefore=1))
+                edu_block.append(Paragraph(f"<b>{edu['institution']}</b>", styles["body"]))
+                edu_block.append(Paragraph(degree_field, styles["job_title"]))
                 
-            edu_block.append(Paragraph(degree_field, styles["job_title"]))
-            edu_block.append(Spacer(1, S["item_gap"]))
+                # Show location if available
+                loc = edu.get("location", "")
+                if loc:
+                    edu_block.append(Spacer(1, 4))
+                    edu_block.append(Paragraph(loc, styles["body"]))
+                
+            edu_block.append(Spacer(1, S["item_gap"] + 2))
         add_to_flow(edu_block, "right")
 
     if user_data.get("skills"):
         skills_block = []
         section_header(skills_block, "Key Skills" if not R.get("single_column") else "Skills", styles)
-        for category, skill_list in user_data["skills"].items():
-            skills_str = " • ".join(skill_list)
-            if R.get("single_column"):
+        if R.get("single_column"):
+            for category, skill_list in user_data["skills"].items():
+                skills_str = " • ".join(skill_list)
                 skills_block.append(Paragraph(f'<b>{category}:</b>  {skills_str}', styles["skills_val"]))
-            else:
-                skills_block.append(Paragraph(f'• {category}: {skills_str}', styles["bullet"]))
+        else:
+            # For two-column: render each skill as individual bullet
+            skill_style = ParagraphStyle(
+                "skill_bullet", fontName=T["font_primary"],
+                fontSize=8.5, leading=11,
+                textColor=HexColor(P["ink_light"]),
+            )
+            for category, skill_list in user_data["skills"].items():
+                # Category as a label
+                skills_block.append(Paragraph(f'<b>• {category}:</b> {" • ".join(skill_list)}', skill_style))
         add_to_flow(skills_block, "right")
 
     if user_data.get("certifications"):
@@ -805,26 +828,28 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
         add_to_flow(cert_block, "right")
 
     if not R.get("single_column"):
-        left_col_width = (letter[0] - S["margin_left"] * inch - S["margin_right"] * inch) * 0.70
-        right_col_width = (letter[0] - S["margin_left"] * inch - S["margin_right"] * inch) * 0.30
+        content_width = letter[0] - S["margin_left"] * inch - S["margin_right"] * inch
+        col_ratio = 0.62
+        left_col_width = content_width * col_ratio
+        right_col_width = content_width * (1 - col_ratio)
         
         main_table = Table([[left_column, right_column]], colWidths=[left_col_width, right_col_width])
         main_table.setStyle(TableStyle([
             ('VALIGN', (0,0), (-1,-1), 'TOP'),
-            ('BACKGROUND', (1,0), (1,0), HexColor("#C4D6E0")),
-            ('LEFTPADDING', (1,0), (1,0), 12),
-            ('RIGHTPADDING', (1,0), (1,0), 12),
-            ('TOPPADDING', (1,0), (1,0), 12),
+            # No BACKGROUND on right col — draw_background handles the sidebar
+            ('LEFTPADDING', (1,0), (1,0), 14),
+            ('RIGHTPADDING', (1,0), (1,0), 8),
+            ('TOPPADDING', (1,0), (1,0), 6),
             ('BOTTOMPADDING', (1,0), (1,0), 12),
             ('LEFTPADDING', (0,0), (0,0), 0),
-            ('RIGHTPADDING', (0,0), (0,0), 12),
+            ('RIGHTPADDING', (0,0), (0,0), 14),
             ('TOPPADDING', (0,0), (0,0), 0),
             ('BOTTOMPADDING', (0,0), (0,0), 0),
         ]))
         
-        # Determine available height to shrink if necessary
-        header_height = 200 # approximate height of name + tagline + contact + HR
-        frame_width = letter[0] - S["margin_left"] * inch - S["margin_right"] * inch
+        # Shrink to fit if content is too tall
+        header_height = 130
+        frame_width = content_width
         frame_height = letter[1] - S["margin_top"] * inch - S["margin_bottom"] * inch - header_height
         
         story.append(KeepInFrame(frame_width, frame_height, [main_table], mode='shrink'))
