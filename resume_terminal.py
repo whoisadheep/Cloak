@@ -27,7 +27,7 @@ from reportlab.lib.units import inch
 from reportlab.lib.colors import HexColor, black, white
 from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, HRFlowable,
-    KeepTogether, Table, TableStyle
+    KeepTogether, Table, TableStyle, KeepInFrame
 )
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
 
@@ -802,7 +802,13 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
             ('TOPPADDING', (0,0), (0,0), 0),
             ('BOTTOMPADDING', (0,0), (0,0), 0),
         ]))
-        story.append(main_table)
+        
+        # Determine available height to shrink if necessary
+        header_height = 200 # approximate height of name + tagline + contact + HR
+        frame_width = letter[0] - S["margin_left"] * inch - S["margin_right"] * inch
+        frame_height = letter[1] - S["margin_top"] * inch - S["margin_bottom"] * inch - header_height
+        
+        story.append(KeepInFrame(frame_width, frame_height, [main_table], mode='shrink'))
 
     doc.build(story, onFirstPage=draw_background, onLaterPages=draw_background)
 
