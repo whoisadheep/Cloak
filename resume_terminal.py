@@ -389,7 +389,21 @@ def draw_background(canvas, doc):
     canvas.saveState()
 
     canvas.setFillColor(HexColor(STITCH_TOKENS["palette"]["page"]))
-    canvas.rect(0, 0, letter[0], letter[1], fill=1)
+    canvas.rect(0, 0, letter[0], letter[1], fill=1, stroke=0)
+
+    if not STITCH_TOKENS["rules"].get("single_column"):
+        S = STITCH_TOKENS["spacing"]
+        content_width = letter[0] - S["margin_left"] * inch - S["margin_right"] * inch
+        right_col_x = S["margin_left"] * inch + content_width * 0.70
+        # Right column width + padding so it aligns with the table
+        right_col_w = content_width * 0.30
+        
+        # Estimate header height based on spacing and fonts
+        header_height = 140
+        
+        canvas.setFillColor(HexColor("#C4D6E0"))
+        canvas.rect(right_col_x, 0, right_col_w, letter[1] - header_height, fill=1, stroke=0)
+
     canvas.restoreState()
 
 def build_styles():
@@ -514,9 +528,10 @@ def build_styles():
 
 def section_rule(story):
     """Add a horizontal rule under section header."""
+    thickness = 1.5 if not STITCH_TOKENS["rules"].get("single_column") else 0.5
     story.append(HRFlowable(
-        width="100%",
-        thickness=0.5,
+        width="99%",
+        thickness=thickness,
         color=HexColor(STITCH_TOKENS["palette"]["rule"]),
         spaceAfter=5,
         spaceBefore=1,
@@ -620,12 +635,16 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
         
         # Build contact grid
         contact_parts = []
-        if personal.get("phone"): contact_parts.append(f"<b>P</b> {personal.get('phone')}")
-        if personal.get("email"): contact_parts.append(f"<b>E</b> {personal.get('email')}")
-        if personal.get("location"): contact_parts.append(f"<b>A</b> {personal.get('location')}")
-        if personal.get("linkedin"): contact_parts.append(f"<b>W</b> {personal.get('linkedin')}")
         
-        contact_line = " &nbsp;&nbsp;&nbsp;&nbsp; ".join(contact_parts)
+        def _fmt_contact(char, text):
+            return f"<font backColor='#1A2639' color='white'>&nbsp;<b>{char}</b>&nbsp;</font> {text}"
+            
+        if personal.get("phone"): contact_parts.append(_fmt_contact("P", personal.get("phone")))
+        if personal.get("email"): contact_parts.append(_fmt_contact("E", personal.get("email")))
+        if personal.get("location"): contact_parts.append(_fmt_contact("A", personal.get("location")))
+        if personal.get("linkedin"): contact_parts.append(_fmt_contact("W", personal.get("linkedin")))
+        
+        contact_line = " &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ".join(contact_parts)
         story.append(Paragraph(contact_line, styles["contact"]))
         story.append(Spacer(1, 6))
         story.append(HRFlowable(width="100%", thickness=2, color=HexColor("#C4D6E0"), spaceBefore=2, spaceAfter=12))
