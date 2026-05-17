@@ -73,8 +73,8 @@ STITCH_TOKENS = {
         "leading_tight":  14,
     },
     "spacing": {
-        "margin_top":    0.60,
-        "margin_bottom": 0.60,
+        "margin_top":    0.50,
+        "margin_bottom": 0.50,
         "margin_left":   0.65,
         "margin_right":  0.65,
 
@@ -398,8 +398,8 @@ def draw_background(canvas, doc):
         # Right column width + padding so it aligns with the table
         right_col_w = content_width * 0.30
         
-        # Estimate header height based on spacing and fonts
-        header_height = 140
+        # Header includes: name + tagline + HR + contact row + HR + spacer
+        header_height = 175
         
         canvas.setFillColor(HexColor("#C4D6E0"))
         canvas.rect(right_col_x, 0, right_col_w, letter[1] - header_height, fill=1, stroke=0)
