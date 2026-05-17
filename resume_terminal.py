@@ -601,6 +601,7 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
     apply_template(user_data.get("template", "Sovereign Executive"))
     
     S = STITCH_TOKENS["spacing"]
+    T = STITCH_TOKENS["typography"]
     styles = build_styles()
     P = STITCH_TOKENS["palette"]
     R = STITCH_TOKENS["rules"]
