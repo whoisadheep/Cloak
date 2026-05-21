@@ -1111,6 +1111,86 @@
     }
   }
 
+  // ── 3D Card Tilt Effect ─────────────────────────────────────
+  (function initCardTilt() {
+    const MAX_TILT = 8; // degrees
+    let tiltFrame = null;
+
+    function handleTiltMove(e) {
+      const card = e.currentTarget;
+      if (tiltFrame) return; // Throttle to 1 update per frame
+      tiltFrame = requestAnimationFrame(() => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        const rotateY = ((x - centerX) / centerX) * MAX_TILT;
+        const rotateX = ((centerY - y) / centerY) * MAX_TILT;
+        card.style.transform = `perspective(800px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateZ(4px)`;
+        // Update spotlight position
+        card.style.setProperty('--card-x', x + 'px');
+        card.style.setProperty('--card-y', y + 'px');
+        tiltFrame = null;
+      });
+    }
+
+    function handleTiltLeave(e) {
+      const card = e.currentTarget;
+      card.style.transform = '';
+      card.style.removeProperty('--card-x');
+      card.style.removeProperty('--card-y');
+    }
+
+    function attachTilt(selector) {
+      document.querySelectorAll(selector).forEach(card => {
+        card.addEventListener('mousemove', handleTiltMove, { passive: true });
+        card.addEventListener('mouseleave', handleTiltLeave, { passive: true });
+      });
+    }
+
+    // Attach on initial load
+    attachTilt('.feature-card');
+    attachTilt('.review-card');
+
+    // Re-attach after reviews are rendered (they get re-created)
+    const origRenderReviewCards = renderReviewCards;
+    renderReviewCards = function(reviews) {
+      origRenderReviewCards(reviews);
+      setTimeout(() => attachTilt('.review-card'), 50);
+    };
+  })();
+
+  // ── Ambient Glow Tracking ──────────────────────────────────
+  (function initGlow() {
+    const glow = document.querySelector('.landing-glow');
+    if (!glow) return;
+
+    let glowFrame = null;
+
+    document.addEventListener('mousemove', (e) => {
+      if (glowFrame) return;
+      glowFrame = requestAnimationFrame(() => {
+        const landing = document.getElementById('view-landing');
+        if (!landing || !landing.classList.contains('active')) {
+          glowFrame = null;
+          return;
+        }
+        const rect = landing.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
+        const y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
+        glow.style.setProperty('--glow-x', x + '%');
+        glow.style.setProperty('--glow-y', y + '%');
+        if (!glow.classList.contains('active')) glow.classList.add('active');
+        glowFrame = null;
+      });
+    }, { passive: true });
+
+    document.addEventListener('mouseleave', () => {
+      glow.classList.remove('active');
+    }, { passive: true });
+  })();
+
   // ── Init ───────────────────────────────────────────────────
   renderTemplateGrid();
   fetchAndRenderReviews();
