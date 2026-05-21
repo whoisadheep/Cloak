@@ -294,7 +294,16 @@
 
     const label = document.createElement("div");
     label.className = "msg-label";
-    label.textContent = role === "user" ? "You" : "Cloak";
+
+    const avatar = document.createElement("span");
+    avatar.className = "msg-avatar";
+    avatar.textContent = role === "user" ? "Y" : "C";
+
+    const nameSpan = document.createElement("span");
+    nameSpan.textContent = role === "user" ? "You" : "Cloak";
+
+    label.appendChild(avatar);
+    label.appendChild(nameSpan);
 
     const bubble = document.createElement("div");
     bubble.className = "msg-bubble";
