@@ -289,7 +289,7 @@
     if (urlMatch) {
       const url = urlMatch[0];
       state.isStreaming = true; // Block further inputs
-      typingIndicator.classList.add("visible");
+      typingEl.classList.add("visible");
       
       try {
         const response = await fetch("/api/extract-url", {
@@ -327,7 +327,7 @@ User's message: ${text}`;
         console.error("Network error during scraping:", err);
       }
       
-      typingIndicator.classList.remove("visible");
+      typingEl.classList.remove("visible");
       state.isStreaming = false;
     }
 
