@@ -308,7 +308,11 @@ Here is the extracted job description text:
 ${data.text}
 ---
 
-Please tailor the resume aggressively to match this job description. If the user provided additional instructions in their message, follow them too:
+Please tailor the existing resume content to match this job description. 
+CRITICAL RULES:
+1. DO NOT invent fake companies, fake internships, or fake degrees.
+2. Only rewrite and enhance the user's EXISTING bullet points and summary to naturally highlight relevant keywords from the job description.
+3. If the user provided additional instructions in their message, follow them too:
 User's message: ${text}`;
           
           // Optionally show a tiny system message in the chat that scraping succeeded
