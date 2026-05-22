@@ -688,7 +688,7 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
 
             link_str = proj.get("link", "")
             tbl = Table(
-                [[Paragraph(proj["name"], styles["company"]),
+                [[Paragraph(proj.get("name", ""), styles["company"]),
                   Paragraph(link_str, styles["date_line"])]],
                 colWidths=["60%", "40%"],
                 style=TableStyle([
@@ -717,7 +717,7 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
             loc_str  = exp.get("location", "")
 
             tbl = Table(
-                [[Paragraph(exp["company"], styles["company"]),
+                [[Paragraph(exp.get("company", ""), styles["company"]),
                   Paragraph(date_str, styles["date_line"])]],
                 colWidths=["70%", "30%"],
                 style=TableStyle([
@@ -729,7 +729,7 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
                 ])
             )
             entry_block.append(tbl)
-            title_loc = exp["title"]
+            title_loc = exp.get("title", exp.get("role", ""))
             if loc_str:
                 title_loc += f"  •  {loc_str}"
             entry_block.append(Paragraph(title_loc, styles["job_title"]))
@@ -742,13 +742,13 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
         edu_block = []
         section_header(edu_block, "Education", styles)
         for edu in user_data["education"]:
-            degree_field = edu["degree"]
+            degree_field = edu.get("degree", "")
             if edu.get("field"):
                 degree_field += f", {edu['field']}"
             
             if R.get("single_column"):
                 tbl = Table(
-                    [[Paragraph(edu["institution"], styles["company"]),
+                    [[Paragraph(edu.get("institution", ""), styles["company"]),
                       Paragraph(edu.get("year", ""), styles["date_line"])]],
                     colWidths=["70%", "30%"],
                     style=TableStyle([
@@ -768,7 +768,7 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
                         textColor=HexColor(P["ink"]), alignment=TA_RIGHT,
                     )))
                     edu_block.append(HRFlowable(width="99%", thickness=0.5, color=HexColor(P["rule"]), spaceAfter=3, spaceBefore=1))
-                edu_block.append(Paragraph(f"<b>{edu['institution']}</b>", styles["body"]))
+                edu_block.append(Paragraph(f"<b>{edu.get('institution', '')}</b>", styles["body"]))
                 edu_block.append(Paragraph(degree_field, styles["job_title"]))
                 
                 # Show location if available
@@ -805,7 +805,7 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
         for cert in user_data["certifications"]:
             if R.get("single_column"):
                 tbl = Table(
-                    [[Paragraph(cert["name"], styles["cert_name"]),
+                    [[Paragraph(cert.get("name", ""), styles["cert_name"]),
                       Paragraph(cert.get("year", ""), styles["date_line"])]],
                     colWidths=["70%", "30%"],
                     style=TableStyle([
@@ -817,7 +817,7 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
                 cert_block.append(tbl)
             else:
                 cert_block.append(Paragraph(cert.get("year", ""), styles["date_line"]))
-                cert_block.append(Paragraph(cert["name"], styles["cert_name"]))
+                cert_block.append(Paragraph(cert.get("name", ""), styles["cert_name"]))
             cert_block.append(Paragraph(cert.get("issuer", ""), styles["cert_meta"]))
         add_to_flow(cert_block, "right")
 
