@@ -8,3 +8,4 @@ gunicorn
 anthropic
 PyPDF2
 psycopg2-binary
+requests

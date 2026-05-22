@@ -273,18 +273,66 @@
     streamResponse();
   }
 
-  function sendMessage() {
+  async function sendMessage() {
     const text = chatInput.value.trim();
     if (!text || state.isStreaming) return;
 
     appendMessage("user", text);
-    state.messages.push({ role: "user", content: text });
-    saveState();
-
     chatInput.value = "";
     chatInput.style.height = "auto";
     btnSend.disabled = true;
 
+    // Detect URL in the text
+    const urlMatch = text.match(/https?:\/\/[^\s]+/);
+    let finalPayload = text;
+
+    if (urlMatch) {
+      const url = urlMatch[0];
+      state.isStreaming = true; // Block further inputs
+      typingIndicator.classList.add("visible");
+      
+      try {
+        const response = await fetch("/api/extract-url", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: url })
+        });
+        
+        const data = await response.json();
+        if (response.ok && data.text) {
+          // Augment the payload invisibly for the AI
+          finalPayload = `The user provided the following job link: ${url}. 
+Here is the extracted job description text:
+
+---
+${data.text}
+---
+
+Please tailor the resume aggressively to match this job description. If the user provided additional instructions in their message, follow them too:
+User's message: ${text}`;
+          
+          // Optionally show a tiny system message in the chat that scraping succeeded
+          const alert = document.createElement("div");
+          alert.style.fontSize = "0.7rem";
+          alert.style.color = "var(--success)";
+          alert.style.textAlign = "center";
+          alert.style.marginBottom = "10px";
+          alert.textContent = "✓ Job description scraped successfully. Tailoring resume...";
+          chatMessages.appendChild(alert);
+          scrollChat();
+        } else {
+          console.error("Scraping failed:", data.error);
+        }
+      } catch (err) {
+        console.error("Network error during scraping:", err);
+      }
+      
+      typingIndicator.classList.remove("visible");
+      state.isStreaming = false;
+    }
+
+    state.messages.push({ role: "user", content: finalPayload });
+    saveState();
     streamResponse();
   }
 

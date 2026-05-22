@@ -14,6 +14,7 @@ from datetime import datetime, timezone
 import PyPDF2
 import psycopg2
 import psycopg2.extras
+import requests
 
 from flask import (
     Flask, request, Response, jsonify,
@@ -216,6 +217,29 @@ def upload_file():
         return jsonify({"text": text.strip()})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route("/api/extract-url", methods=["POST"])
+def extract_url():
+    """Extract clean markdown text from a URL using Jina Reader API."""
+    data = request.json
+    url = data.get("url")
+    if not url:
+        return jsonify({"error": "No URL provided"}), 400
+        
+    try:
+        # Use Jina Reader API to get clean markdown from heavily JavaScript/bot-protected sites
+        jina_url = f"https://r.jina.ai/{url}"
+        response = requests.get(jina_url, timeout=15)
+        response.raise_for_status()
+        
+        text = response.text
+        if not text.strip():
+            return jsonify({"error": "Could not extract text from this URL."}), 400
+            
+        return jsonify({"text": text.strip()})
+    except Exception as e:
+        print(f"[EXTRACT URL ERROR] {e}", flush=True)
+        return jsonify({"error": "Failed to scrape the URL. The site might be blocking access."}), 500
 
 @app.route("/api/generate", methods=["POST"])
 def generate_pdf():
