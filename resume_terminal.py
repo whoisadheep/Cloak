@@ -842,7 +842,15 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
         
         story.append(main_table)
 
-    doc.build(story, onFirstPage=draw_background, onLaterPages=draw_background)
+    try:
+        doc.build(story, onFirstPage=draw_background, onLaterPages=draw_background)
+    except Exception as e:
+        if "too large" in str(e).lower() and not R.get("single_column"):
+            print(f"[Layout Fallback] Resume too long for 2-column layout. Switching to single column.")
+            STITCH_TOKENS["rules"]["single_column"] = True
+            return build_pdf(user_data, output_path, ats_report)
+        else:
+            raise
 
 @click.group()
 @click.version_option(version="1.0.0", prog_name="ResumeTerminal")
