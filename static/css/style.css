@@ -106,7 +106,7 @@ a:hover { color: var(--accent-hover); }
 /* Beautiful Donate Button */
 .btn-donate {
   background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
-  color: #fff;
+  color: #ffffff !important;
   font-weight: 600;
   border: none;
   box-shadow: 0 4px 14px rgba(255, 107, 107, 0.3);
