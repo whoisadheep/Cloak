@@ -157,28 +157,38 @@
   });
 
   // ── Donate Modal ──────────────────────────────────────────
-  const donateBtns = document.querySelectorAll(".btn-donate");
+  const donateBtns = document.querySelectorAll(".btn-donate:not(#btn-proceed-donate)");
   donateBtns.forEach(btn => {
     btn.addEventListener("click", (e) => {
       e.preventDefault();
-      // Detect if user is on mobile
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      if (isMobile) {
-        // Direct intent link for mobile
-        window.location.href = "upi://pay?pa=whoisadheep@okhdfcbank&pn=whoisadheep&cu=INR";
-      } else {
-        // Show QR modal for desktop
-        $("#donate-modal").classList.add("visible");
-      }
+      // Reset modal to step 1
+      $("#donate-step-1").style.display = "block";
+      $("#donate-step-2").style.display = "none";
+      $("#donate-modal").classList.add("visible");
     });
   });
 
-  $("#btn-donate-close").addEventListener("click", () => {
-    $("#donate-modal").classList.remove("visible");
+  $("#btn-proceed-donate").addEventListener("click", (e) => {
+    e.preventDefault();
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (isMobile) {
+      window.location.href = "upi://pay?pa=whoisadheep@okhdfcbank&pn=whoisadheep&cu=INR";
+    } else {
+      $("#donate-step-1").style.display = "none";
+      $("#donate-step-2").style.display = "block";
+    }
   });
+
+  const closeDonateModal = () => {
+    $("#donate-modal").classList.remove("visible");
+  };
+
+  $("#btn-donate-close").addEventListener("click", closeDonateModal);
+  $("#btn-donate-close-2").addEventListener("click", closeDonateModal);
+  
   $("#donate-modal").addEventListener("click", (e) => {
     if (e.target === $("#donate-modal")) {
-      $("#donate-modal").classList.remove("visible");
+      closeDonateModal();
     }
   });
 

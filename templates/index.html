@@ -279,21 +279,41 @@
        DONATE MODAL
        ============================================================ -->
   <div class="modal-overlay" id="donate-modal">
-    <div class="modal-box" style="text-align: center; max-width: 320px;">
-      <div class="modal-title" style="margin-bottom: 12px;">Support Cloak 💖</div>
-      <div class="modal-desc" style="margin-bottom: 24px;">Scan with any UPI app (GPay, PhonePe, Paytm) to donate. Thank you for keeping the servers running!</div>
+    <div class="modal-box" style="text-align: center; max-width: 380px;">
       
-      <div style="background: white; padding: 16px; border-radius: 12px; display: inline-block; margin-bottom: 24px;">
-        <img src="/static/images/upi_qr.png" alt="UPI QR Code" style="width: 200px; height: 200px; display: block;">
-      </div>
-      
-      <div style="font-size: 0.85rem; color: var(--text-2); margin-bottom: 24px; font-weight: 500;">
-        whoisadheep@okhdfcbank
+      <!-- Step 1: The Pitch -->
+      <div id="donate-step-1">
+        <div style="font-size: 3rem; margin-bottom: 12px;">❤️</div>
+        <div class="modal-title" style="margin-bottom: 12px; font-size: 1.3rem;">Keep Cloak Alive</div>
+        <div class="modal-desc" style="margin-bottom: 24px; font-size: 0.95rem; line-height: 1.6; color: var(--text-1);">
+          I built Cloak to help professionals craft the perfect resume without the frustrating paywalls of typical resume builders.<br><br>
+          If this tool helped you land an interview or saved you hours of formatting, please consider dropping a small tip. Even a small amount helps cover the expensive AI and server costs so I can keep this free for everyone.
+        </div>
+        
+        <div style="display:flex; flex-direction: column; gap: 10px; align-items: center;">
+          <button class="btn btn-donate" id="btn-proceed-donate" style="width: 100%; padding: 12px;">Support with any amount</button>
+          <button class="btn btn-ghost" id="btn-donate-close" style="width: 100%;">Maybe later</button>
+        </div>
       </div>
 
-      <div style="display:flex;justify-content:center;">
-        <button class="btn btn-ghost" id="btn-donate-close">Close</button>
+      <!-- Step 2: The QR Code (Desktop only, mobile will redirect to intent) -->
+      <div id="donate-step-2" style="display: none;">
+        <div class="modal-title" style="margin-bottom: 12px;">Scan to Donate 💖</div>
+        <div class="modal-desc" style="margin-bottom: 24px;">Scan with any UPI app (GPay, PhonePe, Paytm). Thank you!</div>
+        
+        <div style="background: white; padding: 16px; border-radius: 12px; display: inline-block; margin-bottom: 24px;">
+          <img src="/static/images/upi_qr.png" alt="UPI QR Code" style="width: 200px; height: 200px; display: block;">
+        </div>
+        
+        <div style="font-size: 0.85rem; color: var(--text-2); margin-bottom: 24px; font-weight: 500;">
+          whoisadheep@okhdfcbank
+        </div>
+
+        <div style="display:flex;justify-content:center;">
+          <button class="btn btn-ghost" id="btn-donate-close-2">Close</button>
+        </div>
       </div>
+
     </div>
   </div>
 
