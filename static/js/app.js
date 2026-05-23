@@ -156,6 +156,32 @@
     }
   });
 
+  // ── Donate Modal ──────────────────────────────────────────
+  const donateBtns = document.querySelectorAll(".btn-donate");
+  donateBtns.forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      // Detect if user is on mobile
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      if (isMobile) {
+        // Direct intent link for mobile
+        window.location.href = "upi://pay?pa=whoisadheep@okhdfcbank&pn=whoisadheep&cu=INR";
+      } else {
+        // Show QR modal for desktop
+        $("#donate-modal").classList.add("visible");
+      }
+    });
+  });
+
+  $("#btn-donate-close").addEventListener("click", () => {
+    $("#donate-modal").classList.remove("visible");
+  });
+  $("#donate-modal").addEventListener("click", (e) => {
+    if (e.target === $("#donate-modal")) {
+      $("#donate-modal").classList.remove("visible");
+    }
+  });
+
   // File upload
   const uploadZone = $("#upload-zone");
   const fileInput  = $("#file-input");
@@ -231,6 +257,68 @@
     }
   }
 
+  // URL Import from Modal
+  $("#btn-url-import").addEventListener("click", async () => {
+    const url = $("#url-input").value.trim();
+    if (!url) return;
+
+    $("#upload-modal").classList.remove("visible");
+    showView("chat");
+    
+    const isProfileUrl = url.includes("linkedin.com") || url.includes("github.com");
+    
+    appendMessage("user", `Importing from: ${url}`);
+    const uploadBubble = appendMessage("assistant", "Scraping profile data...");
+    scrollChat();
+    typingEl.classList.add("visible");
+    
+    try {
+      const response = await fetch("/api/extract-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: url })
+      });
+      
+      const data = await response.json();
+      if (!response.ok || !data.text) throw new Error(data.error || "Failed to scrape URL");
+      
+      uploadBubble.remove();
+      
+      let payload = "";
+      if (isProfileUrl) {
+        payload = `The user provided a link to their profile: ${url}. 
+Here is the extracted data from their profile:
+
+---
+${data.text}
+---
+
+Please use this data to bootstrap or update their resume information (experience, education, projects, skills). 
+CRITICAL RULES:
+1. Extract all relevant professional details and structure them into the resume JSON.`;
+      } else {
+        payload = `The user provided a link: ${url}. 
+Here is the extracted text:
+
+---
+${data.text}
+---
+
+Please extract any relevant resume information from this text.`;
+      }
+
+      state.messages.push({ role: "user", content: payload });
+      saveState();
+      
+      // Trigger AI response
+      streamResponse();
+    } catch (err) {
+      uploadBubble.remove();
+      typingEl.classList.remove("visible");
+      appendMessage("assistant", "Sorry, I couldn't extract data from that URL. Some sites block automated access.");
+    }
+  });
+
   // ── Chat ──────────────────────────────────────────────────
   $("#btn-chat-back").addEventListener("click", () => showView("landing"));
   $("#btn-template-back").addEventListener("click", () => showView("chat"));
@@ -296,8 +384,24 @@
         
         const data = await response.json();
         if (response.ok && data.text) {
-          // Augment the payload invisibly for the AI
-          finalPayload = `The user provided the following job link: ${url}. 
+          // Check if the URL is a LinkedIn or GitHub profile
+          const isProfileUrl = url.includes("linkedin.com") || url.includes("github.com");
+
+          if (isProfileUrl) {
+            finalPayload = `The user provided a link to their profile: ${url}. 
+Here is the extracted data from their profile:
+
+---
+${data.text}
+---
+
+Please use this data to bootstrap or update their resume information (experience, education, projects, skills). 
+CRITICAL RULES:
+1. Extract all relevant professional details and structure them into the resume JSON.
+2. If the user provided additional instructions, follow them:
+User's message: ${text}`;
+          } else {
+            finalPayload = `The user provided the following job link: ${url}. 
 Here is the extracted job description text:
 
 ---
@@ -310,14 +414,17 @@ CRITICAL RULES:
 2. Only rewrite and enhance the user's EXISTING bullet points and summary to naturally highlight relevant keywords from the job description.
 3. If the user provided additional instructions in their message, follow them too:
 User's message: ${text}`;
+          }
           
-          // Optionally show a tiny system message in the chat that scraping succeeded
+          // Show a tiny system message in the chat
           const alert = document.createElement("div");
           alert.style.fontSize = "0.7rem";
           alert.style.color = "var(--success)";
           alert.style.textAlign = "center";
           alert.style.marginBottom = "10px";
-          alert.textContent = "✓ Job description scraped successfully. Tailoring resume...";
+          alert.textContent = isProfileUrl 
+            ? "✓ Profile data scraped successfully. Updating resume..."
+            : "✓ Job description scraped successfully. Tailoring resume...";
           chatMessages.appendChild(alert);
           scrollChat();
         } else {
