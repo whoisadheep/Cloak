@@ -544,50 +544,20 @@ def apply_template(template_name: str):
     T = STITCH_TOKENS["typography"]
     R = STITCH_TOKENS["rules"]
 
-    if template_name == "Creative Bold":
-        P["page"] = "#FFFFFF"
-        P["ink"] = "#1A2639"
-        P["ink_light"] = "#444444"
-        P["ink_muted"] = "#444444"
-        P["rule"] = "#1A2639"
-        
-        T["font_primary"] = "Helvetica"
-        T["font_bold"] = "Helvetica-Bold"
-        T["font_oblique"] = "Helvetica-Oblique"
-        
-        R["header_alignment"] = TA_CENTER
-        R["header_uppercase"] = True
-        R["contact_font"] = "Helvetica"
-        R["single_column"] = False
-    elif template_name == "Modern Tech":
-        P["page"] = "#FFFFFF"
-        P["ink"] = "#111827"
-        P["ink_light"] = "#374151"
-        P["ink_muted"] = "#6B7280"
-        P["rule"] = "#3B82F6"
-        
-        T["font_primary"] = "Helvetica"
-        T["font_bold"] = "Helvetica-Bold"
-        T["font_oblique"] = "Courier"
-        
-        R["header_alignment"] = TA_LEFT
-        R["header_uppercase"] = False
-        R["contact_font"] = "Courier"
-    else:
-        # Default: Sovereign Executive
-        P["page"] = "#F9F9F7"
-        P["ink"] = "#1A1A2E"
-        P["ink_light"] = "#333333"
-        P["ink_muted"] = "#444444"
-        P["rule"] = "#1A1A2E"
-        
-        T["font_primary"] = "Helvetica"
-        T["font_bold"] = "Helvetica-Bold"
-        T["font_oblique"] = "Helvetica-Oblique"
-        
-        R["header_alignment"] = TA_CENTER
-        R["header_uppercase"] = True
-        R["contact_font"] = "Helvetica"
+    # Default: Sovereign Executive
+    P["page"] = "#F9F9F7"
+    P["ink"] = "#1A1A2E"
+    P["ink_light"] = "#333333"
+    P["ink_muted"] = "#444444"
+    P["rule"] = "#1A1A2E"
+    
+    T["font_primary"] = "Helvetica"
+    T["font_bold"] = "Helvetica-Bold"
+    T["font_oblique"] = "Helvetica-Oblique"
+    
+    R["header_alignment"] = TA_CENTER
+    R["header_uppercase"] = True
+    R["contact_font"] = "Helvetica"
 
 def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None):
     """Render the resume PDF using Stitch design tokens."""

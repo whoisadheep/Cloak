@@ -25,11 +25,7 @@
   };
 
   const TEMPLATES = [
-    { id: "Sovereign Executive", name: "Sovereign Executive", desc: "Minimalist, architectural whitespace, navy ink.", ats: "98" },
-    { id: "Modern Tech", name: "Modern Tech", desc: "Clean grid, subtle dark accent bar, monospace details.", ats: "95" },
-    { id: "Creative Bold", name: "Creative Bold", desc: "High contrast, strong typographic hierarchy.", ats: "88" },
-    { id: "Classic Traditional", name: "Classic Traditional", desc: "Maximum ATS safety, zero decoration.", ats: "100" },
-    { id: "Academic Research", name: "Academic Research", desc: "Publications section, institution-first layout.", ats: "92" },
+    { id: "Sovereign Executive", name: "Sovereign Executive", desc: "Minimalist, architectural whitespace, navy ink.", ats: "98" }
   ];
 
   // ── DOM refs ───────────────────────────────────────────────

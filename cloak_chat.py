@@ -154,11 +154,7 @@ def print_template_picker():
     table.add_column("ATS Score", justify="right")
     
     templates = [
-        ("1", "Sovereign Executive", "Minimalist, architectural whitespace, navy ink", "98/100"),
-        ("2", "Modern Tech", "Clean grid, subtle dark accent bar, monospace details", "95/100"),
-        ("3", "Creative Bold", "High contrast, strong typographic hierarchy", "88/100"),
-        ("4", "Classic Traditional", "Maximum ATS safety, zero decoration", "100/100"),
-        ("5", "Academic Research", "Publications section, institution-first layout", "92/100")
+        ("1", "Sovereign Executive", "Minimalist, architectural whitespace, navy ink", "98/100")
     ]
     
     for row in templates:
@@ -166,14 +162,10 @@ def print_template_picker():
         
     console.print(table)
     
-    choice = IntPrompt.ask("Select a template", choices=[1, 2, 3, 4, 5])
+    choice = IntPrompt.ask("Select a template", choices=[1])
     
     template_map = {
-        1: "Sovereign Executive",
-        2: "Modern Tech",
-        3: "Creative Bold",
-        4: "Classic Traditional",
-        5: "Academic Research"
+        1: "Sovereign Executive"
     }
     
     return template_map[choice]
