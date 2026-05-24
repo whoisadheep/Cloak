@@ -50,7 +50,11 @@
         <button class="btn btn-secondary" id="btn-upload">
           Upload existing data
         </button>
+        <button class="btn btn-secondary" id="btn-score-landing" style="border-color: var(--accent); color: var(--accent-text);">
+          Score My Resume (Free)
+        </button>
         <input type="file" id="file-upload" accept=".pdf,.txt" style="display: none;">
+        <input type="file" id="file-score" accept=".pdf,.txt" style="display: none;">
       </div>
 
       <div class="landing-features">
@@ -321,6 +325,53 @@
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- ============================================================
+       SCORE MODAL
+       ============================================================ -->
+  <div class="modal-overlay" id="score-modal">
+    <div class="modal-box" style="max-width: 450px; text-align: center;">
+      <div id="score-loading" style="display: none; padding: 40px 0;">
+        <div class="typing-indicator" style="justify-content: center;">
+          <span></span><span></span><span></span>
+        </div>
+        <div style="margin-top: 16px; color: var(--text-2);">Analyzing your resume against ATS standards...</div>
+      </div>
+      
+      <div id="score-results" style="display: none;">
+        <div class="modal-title">Your Resume Score</div>
+        
+        <div class="score-circle-wrap">
+          <svg class="score-circle" viewBox="0 0 100 100">
+            <circle class="score-circle-bg" cx="50" cy="50" r="45"></circle>
+            <circle class="score-circle-prog" cx="50" cy="50" r="45" stroke-dasharray="283" stroke-dashoffset="283"></circle>
+          </svg>
+          <div class="score-number" id="score-number-display">0</div>
+        </div>
+        
+        <div class="score-lists" style="text-align: left; display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px;">
+          <div class="score-pros">
+            <h4 style="color: #4ade80; margin-bottom: 8px;">What looks great:</h4>
+            <ul id="score-pros-list" style="margin:0; padding-left:20px; font-size:0.9rem; color:var(--text-1);"></ul>
+          </div>
+          <div class="score-cons">
+            <h4 style="color: #FF6B6B; margin-bottom: 8px;">Areas for improvement:</h4>
+            <ul id="score-cons-list" style="margin:0; padding-left:20px; font-size:0.9rem; color:var(--text-1);"></ul>
+          </div>
+        </div>
+
+        <div style="background: var(--bg-2); padding: 16px; border-radius: 8px; margin-bottom: 24px; border: 1px solid var(--border);">
+          <div style="font-weight: 600; color: var(--text-0); margin-bottom: 8px;">Want a 95+ score?</div>
+          <div style="font-size: 0.9rem; color: var(--text-2);">Let Cloak rebuild your resume to ATS perfection for free.</div>
+        </div>
+
+        <div style="display:flex; flex-direction: column; gap: 10px;">
+          <button class="btn btn-primary" id="btn-rebuild-resume" style="width: 100%; justify-content: center;">Rebuild Resume with AI</button>
+          <button class="btn btn-ghost" id="btn-score-close" style="width: 100%;">Maybe later</button>
+        </div>
+      </div>
     </div>
   </div>
 

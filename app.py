@@ -290,6 +290,61 @@ def ats_analysis():
     return jsonify(report)
 
 
+@app.route("/api/score", methods=["POST"])
+def score_resume():
+    """Score raw resume text and return a strict JSON response."""
+    data = request.json or {}
+    text = data.get("text", "")
+
+    if not text.strip():
+        return jsonify({"error": "No resume text provided."}), 400
+
+    prompt = f"""
+You are an expert ATS Resume Scorer.
+Evaluate the following raw resume text out of 100 based on these criteria:
+1. Impact: Use of quantified metrics (numbers, %, $).
+2. Action Verbs: Strong verbs starting bullet points.
+3. Brevity & Formatting: Concise phrasing and readability.
+4. Completeness: Presence of contact info, experience, and education.
+
+You must return ONLY a raw JSON object with the following schema:
+{{
+  "score": <integer between 0 and 100>,
+  "pros": ["<pro 1>", "<pro 2>", "<pro 3>"],
+  "cons": ["<con 1>", "<con 2>", "<con 3>"]
+}}
+
+Make the score realistic. Most resumes without heavy metrics should score between 40 and 70.
+Do NOT include any markdown blocks (like ```json), just output the raw JSON object.
+
+Resume Text:
+---
+{text}
+---
+"""
+    try:
+        client = genai.Client(api_key=GEMINI_API_KEY)
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt
+        )
+        
+        # Clean up any potential markdown block formatting from the model
+        resp_text = response.text.strip()
+        if resp_text.startswith("```json"):
+            resp_text = resp_text[7:]
+        if resp_text.startswith("```"):
+            resp_text = resp_text[3:]
+        if resp_text.endswith("```"):
+            resp_text = resp_text[:-3]
+            
+        score_data = json.loads(resp_text.strip())
+        return jsonify(score_data)
+    except Exception as e:
+        print(f"[CLOAK SCORE ERROR] {e}", flush=True)
+        return jsonify({"error": "Failed to score resume."}), 500
+
+
 @app.route("/api/tailor", methods=["POST"])
 def tailor_resume():
     """Use Gemini to rewrite resume data, weaving in missing ATS keywords."""

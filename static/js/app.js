@@ -118,6 +118,87 @@
     $("#upload-modal").classList.add("visible");
   });
 
+  // ── Score Funnel ──────────────────────────────────────────
+  let lastScoredResumeText = "";
+  
+  $("#btn-score-landing").addEventListener("click", () => {
+    $("#file-score").click();
+  });
+
+  $("#file-score").addEventListener("change", async () => {
+    if (!$("#file-score").files.length) return;
+    const file = $("#file-score").files[0];
+    
+    // Show modal loading state
+    $("#score-modal").classList.add("visible");
+    $("#score-loading").style.display = "block";
+    $("#score-results").style.display = "none";
+    
+    const formData = new FormData();
+    formData.append("file", file);
+    
+    try {
+      // 1. Extract text
+      const uploadRes = await fetch("/api/upload", { method: "POST", body: formData });
+      if (!uploadRes.ok) throw new Error("Failed to parse file.");
+      const uploadJson = await uploadRes.json();
+      lastScoredResumeText = uploadJson.text;
+      
+      // 2. Score text
+      const scoreRes = await fetch("/api/score", { 
+        method: "POST", 
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: lastScoredResumeText })
+      });
+      if (!scoreRes.ok) throw new Error("Failed to score.");
+      const scoreJson = await scoreRes.json();
+      
+      // 3. Render Results
+      $("#score-loading").style.display = "none";
+      $("#score-results").style.display = "block";
+      
+      // Animate score circle (283 is full circumference)
+      const prog = 283 - (283 * scoreJson.score) / 100;
+      setTimeout(() => {
+        $(".score-circle-prog").style.strokeDashoffset = prog;
+        $("#score-number-display").innerText = scoreJson.score;
+        // color based on score
+        let color = "var(--accent)";
+        if (scoreJson.score < 60) color = "#FF6B6B";
+        else if (scoreJson.score > 85) color = "#4ade80";
+        $(".score-circle-prog").style.stroke = color;
+        $("#score-number-display").style.color = color;
+      }, 100);
+      
+      // Render lists
+      const prosHtml = scoreJson.pros.map(p => `<li>${p}</li>`).join("");
+      const consHtml = scoreJson.cons.map(c => `<li>${c}</li>`).join("");
+      $("#score-pros-list").innerHTML = prosHtml;
+      $("#score-cons-list").innerHTML = consHtml;
+      
+    } catch (err) {
+      alert("Failed to score resume. Ensure it is a valid PDF.");
+      $("#score-modal").classList.remove("visible");
+    }
+  });
+
+  $("#btn-score-close").addEventListener("click", () => {
+    $("#score-modal").classList.remove("visible");
+  });
+
+  $("#btn-rebuild-resume").addEventListener("click", () => {
+    $("#score-modal").classList.remove("visible");
+    showView("chat");
+    
+    const msg = `Here is my existing resume. Please extract and structure all of my information so we can build my new resume:\n\n${lastScoredResumeText}`;
+    appendMessage("user", "Uploaded existing resume to rebuild.");
+    state.messages.push({ role: "user", content: msg });
+    saveState();
+    
+    // Trigger AI response
+    streamResponse();
+  });
+
   // Edit Modal logic
   const editModal = document.getElementById("edit-modal");
   const editJsonText = document.getElementById("edit-json-text");
