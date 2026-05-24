@@ -39,7 +39,8 @@ DATA ENHANCEMENT RULES:
 
 COMPLETION:
 - Keep the JSON format clean and valid.
-- When the user confirms all sections are done, return ONLY the final JSON and nothing else.
+- When the user confirms all sections are done, you MUST output the final JSON block.
+- IMMEDIATELY AFTER the CLOAK_JSON_END tag, write a brief, encouraging analysis of their completed resume. Highlight 1-2 strong points, and suggest 1-2 areas they could improve or tailor further.
 - You MUST use exactly these JSON keys and structure:
 
 CLOAK_JSON_START
