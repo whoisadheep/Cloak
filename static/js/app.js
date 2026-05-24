@@ -1461,35 +1461,54 @@ User's message: ${text}`;
       origRenderReviewCards(reviews);
       setTimeout(() => attachTilt('.review-card'), 50);
     };
+
+    // Re-attach after template grid is rendered
+    const origRenderTemplateGrid = renderTemplateGrid;
+    renderTemplateGrid = function() {
+      origRenderTemplateGrid();
+      setTimeout(() => attachTilt('.template-card'), 50);
+    };
   })();
 
   // ── Ambient Glow Tracking ──────────────────────────────────
   (function initGlow() {
-    const glow = document.querySelector('.landing-glow');
-    if (!glow) return;
+    const landingGlow = document.querySelector('.landing-glow');
+    const templateGlow = document.querySelector('.template-glow');
 
     let glowFrame = null;
 
     document.addEventListener('mousemove', (e) => {
       if (glowFrame) return;
       glowFrame = requestAnimationFrame(() => {
+        // Landing glow
         const landing = document.getElementById('view-landing');
-        if (!landing || !landing.classList.contains('active')) {
-          glowFrame = null;
-          return;
+        if (landing && landing.classList.contains('active') && landingGlow) {
+          const rect = landing.getBoundingClientRect();
+          const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
+          const y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
+          landingGlow.style.setProperty('--glow-x', x + '%');
+          landingGlow.style.setProperty('--glow-y', y + '%');
+          if (!landingGlow.classList.contains('active')) landingGlow.classList.add('active');
         }
-        const rect = landing.getBoundingClientRect();
-        const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
-        const y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
-        glow.style.setProperty('--glow-x', x + '%');
-        glow.style.setProperty('--glow-y', y + '%');
-        if (!glow.classList.contains('active')) glow.classList.add('active');
+
+        // Template view glow
+        const tplView = document.getElementById('view-template');
+        if (tplView && tplView.classList.contains('active') && templateGlow) {
+          const rect = tplView.getBoundingClientRect();
+          const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
+          const y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
+          templateGlow.style.setProperty('--tpl-glow-x', x + '%');
+          templateGlow.style.setProperty('--tpl-glow-y', y + '%');
+          if (!templateGlow.classList.contains('active')) templateGlow.classList.add('active');
+        }
+
         glowFrame = null;
       });
     }, { passive: true });
 
     document.addEventListener('mouseleave', () => {
-      glow.classList.remove('active');
+      if (landingGlow) landingGlow.classList.remove('active');
+      if (templateGlow) templateGlow.classList.remove('active');
     }, { passive: true });
   })();
 

@@ -151,6 +151,8 @@
        TEMPLATE VIEW
        ============================================================ -->
   <section id="view-template" class="view">
+    <canvas id="template-particle-canvas"></canvas>
+    <div class="template-glow"></div>
     <div class="template-inner slide-up">
       <div style="margin-bottom: 16px;">
         <button class="btn btn-ghost" id="btn-template-back" style="padding-left:0;">
@@ -158,19 +160,27 @@
           Back to Chat
         </button>
       </div>
-      <h2 class="template-heading">Choose a template</h2>
-      <p class="template-sub">Select a design direction for your resume, then download.</p>
+
+      <div class="template-tag">Final Step</div>
+      <h2 class="template-heading">Choose your <em>design</em>.</h2>
+      <p class="template-sub">Select a template. Each one is engineered for maximum ATS compatibility and visual impact.</p>
 
       <div class="template-grid" id="template-grid">
         <!-- Injected by JS -->
       </div>
 
       <div class="ats-section">
+        <div class="ats-section-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/><path d="M9 14l2 2 4-4"/></svg>
+        </div>
         <div class="ats-section-title">ATS Keyword Analysis</div>
         <div class="ats-section-sub">Paste a job description to see how well your resume matches.</div>
         <textarea id="jd-input" placeholder="Paste the full job description here..."></textarea>
         <div class="ats-actions">
-          <button class="btn btn-secondary" id="btn-ats">Analyze</button>
+          <button class="btn btn-secondary" id="btn-ats">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            Analyze
+          </button>
           <button class="btn btn-primary" id="btn-tailor" style="display: none;">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M12 2L4 14M4 2l8 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
             Tailor My Resume
@@ -180,18 +190,31 @@
         <div class="tailor-result" id="tailor-result"></div>
       </div>
 
-      <div class="download-area" style="display: flex; gap: 12px; align-items: center;">
-        <button class="btn btn-secondary" id="btn-edit-json">
-          Edit Data
-        </button>
-        <button class="btn btn-primary" id="btn-download">
-          Download PDF
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2v8M4 7l4 4 4-4M3 13h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
+      <div class="download-section">
+        <div class="download-section-inner">
+          <div class="download-icon-wrap">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </div>
+          <div>
+            <div class="download-title">Your resume is ready</div>
+            <div class="download-desc">Download as a professionally typeset PDF or edit the raw data.</div>
+          </div>
+        </div>
+        <div class="download-actions">
+          <button class="btn btn-ghost" id="btn-edit-json">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit Data
+          </button>
+          <button class="btn btn-primary btn-download-main" id="btn-download">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2v8M4 7l4 4 4-4M3 13h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Download PDF
+          </button>
+        </div>
         <span class="download-status" id="download-status"></span>
       </div>
 
       <div class="donate-banner">
+        <div class="donate-glow-orb"></div>
         <div class="donate-banner-text">
            <strong>Help keep the servers running!</strong><br>
            <span style="color:var(--text-2); font-size: 0.85rem;">Even a small amount keeps this tool ad-free and lightning fast.</span>
