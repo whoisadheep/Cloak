@@ -290,6 +290,13 @@
           If this tool helped you land an interview or saved you hours of formatting, please consider dropping a small tip. Even a small amount helps cover the expensive AI and server costs so I can keep this free for everyone.
         </div>
         
+        <div class="donate-amounts animate-up" style="display: flex; gap: 8px; justify-content: center; margin-bottom: 24px; animation-delay: 0.15s;">
+          <button class="btn btn-ghost amount-chip" data-amount="20">₹20</button>
+          <button class="btn btn-ghost amount-chip active" data-amount="50">₹50</button>
+          <button class="btn btn-ghost amount-chip" data-amount="100">₹100</button>
+          <button class="btn btn-ghost amount-chip" data-amount="">Any</button>
+        </div>
+
         <div class="animate-up" style="display:flex; flex-direction: column; gap: 10px; align-items: center; animation-delay: 0.2s;">
           <button class="btn btn-donate" id="btn-proceed-donate" style="width: 100%; padding: 12px;">Support with any amount</button>
           <button class="btn btn-ghost" id="btn-donate-close" style="width: 100%;">Maybe later</button>
@@ -299,10 +306,10 @@
       <!-- Step 2: The QR Code (Desktop only, mobile will redirect to intent) -->
       <div id="donate-step-2" style="display: none;">
         <div class="modal-title animate-up" style="margin-bottom: 12px;">Scan to Donate 💖</div>
-        <div class="modal-desc animate-up" style="margin-bottom: 24px; animation-delay: 0.1s;">Scan with any UPI app (GPay, PhonePe, Paytm). Thank you!</div>
+        <div class="modal-desc animate-up" id="donate-amount-text" style="margin-bottom: 24px; animation-delay: 0.1s;">Scan with any UPI app (GPay, PhonePe, Paytm). Thank you!</div>
         
         <div class="animate-up" style="background: white; padding: 16px; border-radius: 12px; display: inline-block; margin-bottom: 24px; animation-delay: 0.2s;">
-          <img src="/static/images/upi_qr.png" alt="UPI QR Code" style="width: 200px; height: 200px; display: block;">
+          <img id="donate-qr-img" src="/static/images/upi_qr.png" alt="UPI QR Code" style="width: 200px; height: 200px; display: block;">
         </div>
         
         <div class="animate-up" style="font-size: 0.85rem; color: var(--text-2); margin-bottom: 24px; font-weight: 500; animation-delay: 0.3s;">

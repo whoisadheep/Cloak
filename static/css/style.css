@@ -183,6 +183,18 @@ a:hover { color: var(--accent-hover); }
   animation: slideUpFade 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
+.amount-chip {
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  transition: all 0.2s var(--ease);
+}
+.amount-chip.active {
+  background: var(--accent);
+  color: var(--accent-text) !important;
+  border-color: var(--accent);
+}
+
 /* ============================================================
    LANDING
    ============================================================ */

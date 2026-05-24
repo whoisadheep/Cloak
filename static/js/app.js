@@ -157,6 +157,16 @@
   });
 
   // ── Donate Modal ──────────────────────────────────────────
+  let selectedDonateAmount = "50"; // default
+
+  document.querySelectorAll(".amount-chip").forEach(chip => {
+    chip.addEventListener("click", () => {
+      document.querySelectorAll(".amount-chip").forEach(c => c.classList.remove("active"));
+      chip.classList.add("active");
+      selectedDonateAmount = chip.dataset.amount;
+    });
+  });
+
   const donateBtns = document.querySelectorAll(".btn-donate:not(#btn-proceed-donate)");
   donateBtns.forEach(btn => {
     btn.addEventListener("click", (e) => {
@@ -171,10 +181,30 @@
   $("#btn-proceed-donate").addEventListener("click", (e) => {
     e.preventDefault();
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    let upiLink = "upi://pay?pa=whoisadheep@okhdfcbank&pn=whoisadheep&cu=INR";
+    if (selectedDonateAmount) {
+      upiLink += `&am=${selectedDonateAmount}`;
+    }
+
     if (isMobile) {
-      window.location.href = "upi://pay?pa=whoisadheep@okhdfcbank&pn=whoisadheep&cu=INR";
+      window.location.href = upiLink;
     } else {
       $("#donate-step-1").style.display = "none";
+      
+      const qrImg = $("#donate-qr-img");
+      const amountText = $("#donate-amount-text");
+      
+      if (selectedDonateAmount) {
+        // Generate dynamic QR using a free API (so amount is baked in)
+        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiLink)}`;
+        amountText.innerText = `Scan to donate ₹${selectedDonateAmount} with any UPI app. Thank you!`;
+      } else {
+        // Fallback to generic static QR
+        qrImg.src = "/static/images/upi_qr.png";
+        amountText.innerText = `Scan with any UPI app (GPay, PhonePe, Paytm). Thank you!`;
+      }
+      
       $("#donate-step-2").style.display = "block";
     }
   });
