@@ -177,6 +177,17 @@
       $("#score-pros-list").innerHTML = prosHtml;
       $("#score-cons-list").innerHTML = consHtml;
       
+      // Update CTA dynamically based on score
+      if (scoreJson.score >= 95) {
+        $("#score-cta-title").innerText = "Outstanding Score! 🎉";
+        $("#score-cta-desc").innerText = "Your resume is already highly optimized. You can still use Cloak's AI to effortlessly tailor it to a specific job description or try our premium designs.";
+        $("#btn-rebuild-resume").innerText = "Import to Cloak Anyway";
+      } else {
+        $("#score-cta-title").innerText = "Want a 95+ score?";
+        $("#score-cta-desc").innerText = "Let Cloak rebuild your resume to ATS perfection for free.";
+        $("#btn-rebuild-resume").innerText = "Rebuild Resume with AI";
+      }
+      
     } catch (err) {
       alert("Failed to score resume. Ensure it is a valid PDF.");
       $("#score-modal").classList.remove("visible");
