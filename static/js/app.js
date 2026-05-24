@@ -182,9 +182,13 @@
     e.preventDefault();
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
-    let upiLink = "upi://pay?pa=whoisadheep@okhdfcbank&pn=whoisadheep&cu=INR";
+    let upiLink = "upi://pay?pa=whoisadheep@okhdfcbank&pn=whoisadheep";
     if (selectedDonateAmount) {
-      upiLink += `&am=${selectedDonateAmount}`;
+      // Force two decimal places for maximum compatibility with UPI apps
+      const formattedAmount = parseFloat(selectedDonateAmount).toFixed(2);
+      upiLink += `&am=${formattedAmount}&cu=INR`;
+    } else {
+      upiLink += "&cu=INR";
     }
 
     if (isMobile) {
