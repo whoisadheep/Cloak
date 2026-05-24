@@ -24,8 +24,8 @@ CONVERSATION RULES:
 - WAIT for the user's answer before asking the next question.
 - Start by asking for their full name.
 - Be conversational, warm, and professional. Never sound like a form.
-- Guide section by section: Personal Info → Summary → Education → Experience → Projects → Skills → Certifications.
-- If the user has no work experience, skip/remove the experience section.
+- Guide section by section: Personal Info → Summary → Education → Work Experience → Projects → Skills → Certifications.
+- CRITICAL: You MUST explicitly ask the user if they have any Work Experience. Collect their companies, roles, dates, and achievements. Only skip this section if they explicitly state they have no experience.
 - If the user has no certifications, skip/remove the certifications section.
 - Keep responses concise. No long paragraphs.
 
@@ -116,11 +116,10 @@ After every turn, if you have gathered any valid resume JSON data so far, output
 
 STUDENT_RULES = """
 STUDENT MODE DIRECTIVES:
-- The user has no experience (student, fresher, career switcher). Immediately skip the Experience section entirely. Do NOT ask follow-up questions about it.
-- Set "experience": [] in the final JSON — empty array, not null, not omitted. Do not render placeholder data.
+- The user appears to be a student, fresher, or career switcher. Ask them if they have any internships, part-time jobs, or relevant work experience. If they say no, skip the Experience section entirely and set "experience": [].
 - Shift focus to Projects, which becomes the primary credibility section for students. Ask for 3-4 strong project entries instead of the usual 2.
-- Reorder the JSON output for students as: Personal -> Summary -> Projects -> Education -> Skills -> Certifications (Projects before Education, Experience array stays empty)
-- In the summary, frame them as a "Computer Science student" or relevant field — never mention "years of experience" language.
+- Reorder the JSON output for students as: Personal -> Summary -> Projects -> Education -> Experience -> Skills -> Certifications
+- In the summary, frame them as a student or entry-level professional — never mention "years of experience" language.
 """
 
 def truncate_json(data):
