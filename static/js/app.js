@@ -253,22 +253,103 @@
   // ── Donate Modal ──────────────────────────────────────────
   let selectedDonateAmount = "50"; // default
 
-  document.querySelectorAll(".amount-chip").forEach(chip => {
+  // ── Donate Amount Chips ──
+  document.querySelectorAll(".donate-chip").forEach(chip => {
     chip.addEventListener("click", () => {
-      document.querySelectorAll(".amount-chip").forEach(c => c.classList.remove("active"));
+      document.querySelectorAll(".donate-chip").forEach(c => c.classList.remove("active"));
       chip.classList.add("active");
       selectedDonateAmount = chip.dataset.amount;
     });
   });
 
+  // ── Floating Hearts Canvas ──
+  let heartsAnimId = null;
+  function initDonateHearts() {
+    const canvas = document.getElementById("donate-hearts-canvas");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const hearts = [];
+    const DPR = Math.min(window.devicePixelRatio || 1, 2);
+    let w, h;
+
+    function resize() {
+      w = window.innerWidth;
+      h = window.innerHeight;
+      canvas.width = w * DPR;
+      canvas.height = h * DPR;
+      canvas.style.width = w + "px";
+      canvas.style.height = h + "px";
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    }
+    resize();
+
+    function spawnHeart() {
+      hearts.push({
+        x: Math.random() * w,
+        y: h + 20,
+        size: Math.random() * 14 + 8,
+        speedY: Math.random() * 1.2 + 0.4,
+        speedX: (Math.random() - 0.5) * 0.6,
+        alpha: Math.random() * 0.35 + 0.1,
+        rotation: Math.random() * Math.PI * 2,
+        rotSpeed: (Math.random() - 0.5) * 0.02,
+      });
+    }
+
+    function drawHeart(x, y, size, rotation, alpha) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rotation);
+      ctx.globalAlpha = alpha;
+      ctx.beginPath();
+      const s = size / 15;
+      ctx.moveTo(0, -3 * s);
+      ctx.bezierCurveTo(-5 * s, -15 * s, -20 * s, -5 * s, 0, 10 * s);
+      ctx.bezierCurveTo(20 * s, -5 * s, 5 * s, -15 * s, 0, -3 * s);
+      ctx.closePath();
+      ctx.fillStyle = "#FF6B6B";
+      ctx.fill();
+      ctx.restore();
+    }
+
+    let lastSpawn = 0;
+    function animate(ts) {
+      heartsAnimId = requestAnimationFrame(animate);
+      ctx.clearRect(0, 0, w, h);
+
+      if (ts - lastSpawn > 400) {
+        spawnHeart();
+        lastSpawn = ts;
+      }
+
+      for (let i = hearts.length - 1; i >= 0; i--) {
+        const heart = hearts[i];
+        heart.y -= heart.speedY;
+        heart.x += heart.speedX;
+        heart.rotation += heart.rotSpeed;
+        heart.alpha *= 0.999;
+        drawHeart(heart.x, heart.y, heart.size, heart.rotation, heart.alpha);
+        if (heart.y < -30 || heart.alpha < 0.01) hearts.splice(i, 1);
+      }
+    }
+    heartsAnimId = requestAnimationFrame(animate);
+
+    window.addEventListener("resize", resize, { passive: true });
+  }
+
+  function stopDonateHearts() {
+    if (heartsAnimId) { cancelAnimationFrame(heartsAnimId); heartsAnimId = null; }
+  }
+
+  // ── Open Donate ──
   const donateBtns = document.querySelectorAll(".btn-donate:not(#btn-proceed-donate)");
   donateBtns.forEach(btn => {
     btn.addEventListener("click", (e) => {
       e.preventDefault();
-      // Reset modal to step 1
       $("#donate-step-1").style.display = "block";
       $("#donate-step-2").style.display = "none";
       $("#donate-modal").classList.add("visible");
+      initDonateHearts();
     });
   });
 
@@ -278,7 +359,6 @@
     
     let upiLink = "upi://pay?pa=whoisadheep@okhdfcbank&pn=whoisadheep";
     if (selectedDonateAmount) {
-      // Force two decimal places for maximum compatibility with UPI apps
       const formattedAmount = parseFloat(selectedDonateAmount).toFixed(2);
       upiLink += `&am=${formattedAmount}&cu=INR`;
     } else {
@@ -294,11 +374,9 @@
       const amountText = $("#donate-amount-text");
       
       if (selectedDonateAmount) {
-        // Generate dynamic QR using a free API (so amount is baked in)
         qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiLink)}`;
         amountText.innerText = `Scan to donate ₹${selectedDonateAmount} with any UPI app. Thank you!`;
       } else {
-        // Fallback to generic static QR
         qrImg.src = "/static/images/upi_qr.png";
         amountText.innerText = `Scan with any UPI app (GPay, PhonePe, Paytm). Thank you!`;
       }
@@ -309,10 +387,12 @@
 
   const closeDonateModal = () => {
     $("#donate-modal").classList.remove("visible");
+    stopDonateHearts();
   };
 
   $("#btn-donate-close").addEventListener("click", closeDonateModal);
   $("#btn-donate-close-2").addEventListener("click", closeDonateModal);
+  $("#btn-donate-x").addEventListener("click", closeDonateModal);
   
   $("#donate-modal").addEventListener("click", (e) => {
     if (e.target === $("#donate-modal")) {

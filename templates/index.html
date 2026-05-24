@@ -303,51 +303,70 @@
   </div>
 
   <!-- ============================================================
-       DONATE MODAL
+       DONATE MODAL — Unique Immersive Experience
        ============================================================ -->
-  <div class="modal-overlay" id="donate-modal">
-    <div class="modal-box" style="text-align: center; max-width: 380px;">
-      
-      <!-- Step 1: The Pitch -->
-      <div id="donate-step-1">
-        <div class="heart-icon" style="font-size: 3.5rem; margin-bottom: 16px; display: inline-block;">❤️</div>
-        <div class="modal-title animate-up" style="margin-bottom: 12px; font-size: 1.3rem;">Keep Cloak Alive</div>
-        <div class="modal-desc animate-up" style="margin-bottom: 24px; font-size: 0.95rem; line-height: 1.6; color: var(--text-1); animation-delay: 0.1s;">
-          I built Cloak to help professionals craft the perfect resume without the frustrating paywalls of typical resume builders.<br><br>
-          If this tool helped you land an interview or saved you hours of formatting, please consider dropping a small tip. Even a small amount helps cover the expensive AI and server costs so I can keep this free for everyone.
-        </div>
-        
-        <div class="donate-amounts animate-up" style="display: flex; gap: 8px; justify-content: center; margin-bottom: 24px; animation-delay: 0.15s;">
-          <button class="btn btn-ghost amount-chip" data-amount="20">₹20</button>
-          <button class="btn btn-ghost amount-chip active" data-amount="50">₹50</button>
-          <button class="btn btn-ghost amount-chip" data-amount="100">₹100</button>
-          <button class="btn btn-ghost amount-chip" data-amount="">Any</button>
+  <div class="donate-overlay" id="donate-modal">
+    <canvas id="donate-hearts-canvas"></canvas>
+    <div class="donate-ambient-top"></div>
+    <div class="donate-ambient-bottom"></div>
+
+    <button class="donate-close-x" id="btn-donate-x" aria-label="Close">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+
+    <div class="donate-content">
+      <!-- Step 1: The Emotional Pitch -->
+      <div id="donate-step-1" class="donate-step">
+        <div class="donate-heart-pulse">❤️</div>
+        <h2 class="donate-headline animate-up">Keep Cloak <span>Alive</span></h2>
+        <p class="donate-story animate-up" style="animation-delay: 0.1s;">
+          I built Cloak to help professionals craft the perfect resume without
+          the frustrating paywalls of typical resume builders.<br><br>
+          If this tool helped you land an interview or saved you hours of
+          formatting, please consider a small tip. Even ₹20 helps cover
+          the AI and server costs so I can keep this free for everyone.
+        </p>
+
+        <div class="donate-amounts animate-up" style="animation-delay: 0.15s;">
+          <button class="donate-chip" data-amount="20">₹20</button>
+          <button class="donate-chip active" data-amount="50">₹50</button>
+          <button class="donate-chip" data-amount="100">₹100</button>
+          <button class="donate-chip" data-amount="">Any</button>
         </div>
 
-        <div class="animate-up" style="display:flex; flex-direction: column; gap: 10px; align-items: center; animation-delay: 0.2s;">
-          <button class="btn btn-donate" id="btn-proceed-donate" style="width: 100%; padding: 12px;">Support with any amount</button>
-          <button class="btn btn-ghost" id="btn-donate-close" style="width: 100%;">Maybe later</button>
+        <div class="donate-actions animate-up" style="animation-delay: 0.2s;">
+          <button class="donate-btn-main" id="btn-proceed-donate">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            Support with Love
+          </button>
+          <button class="donate-btn-skip" id="btn-donate-close">Maybe later</button>
         </div>
       </div>
 
-      <!-- Step 2: The QR Code (Desktop only, mobile will redirect to intent) -->
-      <div id="donate-step-2" style="display: none;">
-        <div class="modal-title animate-up" style="margin-bottom: 12px;">Scan to Donate 💖</div>
-        <div class="modal-desc animate-up" id="donate-amount-text" style="margin-bottom: 24px; animation-delay: 0.1s;">Scan with any UPI app (GPay, PhonePe, Paytm). Thank you!</div>
-        
-        <div class="animate-up" style="background: white; padding: 16px; border-radius: 12px; display: inline-block; margin-bottom: 24px; animation-delay: 0.2s;">
-          <img id="donate-qr-img" src="/static/images/upi_qr.png" alt="UPI QR Code" style="width: 200px; height: 200px; display: block;">
-        </div>
-        
-        <div class="animate-up" style="font-size: 0.85rem; color: var(--text-2); margin-bottom: 24px; font-weight: 500; animation-delay: 0.3s;">
-          whoisadheep@okhdfcbank
+      <!-- Step 2: The QR Code -->
+      <div id="donate-step-2" class="donate-step" style="display: none;">
+        <div class="donate-thankyou-icon animate-up">🙏</div>
+        <h2 class="donate-headline animate-up" style="animation-delay: 0.05s;">Thank <span>You</span></h2>
+        <p class="donate-story animate-up" style="animation-delay: 0.1s; font-size: 0.95rem;" id="donate-amount-text">
+          Scan with any UPI app (GPay, PhonePe, Paytm).
+        </p>
+
+        <div class="donate-qr-wrap animate-up" style="animation-delay: 0.15s;">
+          <div class="donate-qr-inner">
+            <img id="donate-qr-img" src="/static/images/upi_qr.png" alt="UPI QR Code">
+          </div>
+          <div class="donate-upi-id">whoisadheep@okhdfcbank</div>
         </div>
 
-        <div class="animate-up" style="display:flex;justify-content:center; animation-delay: 0.4s;">
-          <button class="btn btn-ghost" id="btn-donate-close-2">Close</button>
+        <div class="donate-pay-mobile animate-up" style="animation-delay: 0.2s;">
+          <a id="donate-upi-link" href="#" class="donate-btn-main" style="text-decoration: none;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
+            Open UPI App
+          </a>
         </div>
+
+        <button class="donate-btn-skip animate-up" id="btn-donate-close-2" style="animation-delay: 0.25s;">Close</button>
       </div>
-
     </div>
   </div>
 

@@ -164,25 +164,218 @@ a:hover { color: var(--accent-hover); }
   display: block;
 }
 
-/* Modal Animations & Score Gauge */
-.heart-icon {
-  display: inline-block;
-  animation: heartbeat 2s infinite cubic-bezier(0.4, 0, 0.2, 1);
-  transform-origin: center;
+/* ============================================================
+   DONATE OVERLAY — Unique Full-Screen Experience
+   ============================================================ */
+.donate-overlay {
+  position: fixed; inset: 0; z-index: 300;
+  display: none;
+  align-items: center; justify-content: center;
+  background: radial-gradient(ellipse at 50% 30%, #1a0a0a 0%, #0d0608 40%, #080408 100%);
+  overflow: hidden;
 }
-@keyframes heartbeat {
-  0%, 100% { transform: scale(1); }
-  10% { transform: scale(1.15); }
-  20% { transform: scale(1); }
-  30% { transform: scale(1.15); }
-  40% { transform: scale(1); }
+.donate-overlay.visible { display: flex; }
+
+#donate-hearts-canvas {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none; z-index: 0;
 }
 
+.donate-ambient-top {
+  position: absolute; top: -20%; left: 50%;
+  transform: translateX(-50%);
+  width: 600px; height: 400px;
+  background: radial-gradient(circle, rgba(255, 107, 107, 0.08) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+.donate-ambient-bottom {
+  position: absolute; bottom: -10%; left: 30%;
+  width: 500px; height: 300px;
+  background: radial-gradient(circle, rgba(255, 142, 83, 0.05) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+
+.donate-close-x {
+  position: absolute; top: 24px; right: 24px;
+  z-index: 10;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.5);
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.donate-close-x:hover {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+}
+
+.donate-content {
+  position: relative; z-index: 2;
+  max-width: 420px; width: 90%;
+  text-align: center;
+}
+
+.donate-step { }
+
+.donate-heart-pulse {
+  font-size: 4rem;
+  display: inline-block;
+  margin-bottom: 20px;
+  animation: donateHeartbeat 1.8s infinite cubic-bezier(0.4, 0, 0.2, 1);
+  filter: drop-shadow(0 0 20px rgba(255, 107, 107, 0.4));
+}
+.donate-thankyou-icon {
+  font-size: 3.5rem;
+  display: inline-block;
+  margin-bottom: 16px;
+  animation: donateFloat 3s ease-in-out infinite;
+}
+
+@keyframes donateHeartbeat {
+  0%, 100% { transform: scale(1); }
+  10% { transform: scale(1.2); }
+  20% { transform: scale(1); }
+  30% { transform: scale(1.15); }
+  40%, 100% { transform: scale(1); }
+}
+@keyframes donateFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.donate-headline {
+  font-size: clamp(1.8rem, 5vw, 2.6rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: #fff;
+  margin: 0 0 16px 0;
+  line-height: 1.15;
+}
+.donate-headline span {
+  background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 50%, #FFD93D 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.donate-story {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.7;
+  margin: 0 0 28px 0;
+}
+
+/* ── Amount Chips — Warm Palette ── */
+.donate-amounts {
+  display: flex; gap: 10px;
+  justify-content: center;
+  margin-bottom: 28px;
+}
+.donate-chip {
+  padding: 10px 20px;
+  border-radius: 24px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.7);
+  font-size: 0.9rem; font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-family: var(--font);
+}
+.donate-chip:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.2);
+  color: #fff;
+}
+.donate-chip.active {
+  background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+  color: #fff !important;
+  border-color: transparent;
+  box-shadow: 0 4px 18px rgba(255, 107, 107, 0.35);
+}
+
+/* ── Donate Buttons ── */
+.donate-actions {
+  display: flex; flex-direction: column;
+  gap: 12px; align-items: center;
+}
+
+.donate-btn-main {
+  width: 100%; padding: 14px 24px;
+  background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+  color: #fff; font-weight: 600; font-size: 1rem;
+  border: none; border-radius: 12px;
+  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  box-shadow: 0 6px 24px rgba(255, 107, 107, 0.3);
+  transition: all 0.3s ease;
+  position: relative; overflow: hidden;
+  font-family: var(--font);
+}
+.donate-btn-main::before {
+  content: '';
+  position: absolute; top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.6s ease;
+}
+.donate-btn-main:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(255, 107, 107, 0.4);
+}
+.donate-btn-main:hover::before {
+  left: 100%;
+}
+
+.donate-btn-skip {
+  background: none; border: none;
+  color: rgba(255,255,255,0.35);
+  font-size: 0.88rem;
+  cursor: pointer;
+  padding: 8px 16px;
+  transition: color 0.3s ease;
+  font-family: var(--font);
+}
+.donate-btn-skip:hover { color: rgba(255,255,255,0.6); }
+
+/* ── QR Section ── */
+.donate-qr-wrap {
+  margin-bottom: 24px;
+}
+.donate-qr-inner {
+  background: #fff;
+  padding: 18px;
+  border-radius: 16px;
+  display: inline-block;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+  margin-bottom: 12px;
+}
+.donate-qr-inner img {
+  width: 200px; height: 200px; display: block;
+}
+.donate-upi-id {
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.4);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.donate-pay-mobile {
+  margin-bottom: 12px;
+}
+
+/* Modal Animations */
 .animate-up {
   opacity: 0;
   animation: slideUpFade 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
+/* Keep old amount-chip for backward compat (unused now) */
 .amount-chip {
   padding: 8px 16px;
   border-radius: 20px;
