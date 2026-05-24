@@ -1592,6 +1592,51 @@ User's message: ${text}`;
     }, { passive: true });
   })();
 
+  // ── Global Cursor Spotlight ───────────────────────────────
+  (function initCursorGlow() {
+    const glow = document.getElementById('cursor-glow');
+    if (!glow) return;
+
+    let curX = 0, curY = 0, targetX = 0, targetY = 0;
+    let active = false;
+    let rafId = null;
+
+    function lerp() {
+      curX += (targetX - curX) * 0.15;
+      curY += (targetY - curY) * 0.15;
+      glow.style.left = curX + 'px';
+      glow.style.top = curY + 'px';
+      rafId = requestAnimationFrame(lerp);
+    }
+
+    document.addEventListener('mousemove', (e) => {
+      targetX = e.clientX;
+      targetY = e.clientY;
+      if (!active) {
+        active = true;
+        glow.classList.add('active');
+        rafId = requestAnimationFrame(lerp);
+      }
+    }, { passive: true });
+
+    document.addEventListener('mouseleave', () => {
+      active = false;
+      glow.classList.remove('active');
+      if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    });
+
+    // Switch to warm red glow when donate modal is open
+    const donateObs = new MutationObserver(() => {
+      const donateEl = document.getElementById('donate-modal');
+      if (donateEl && donateEl.classList.contains('visible')) {
+        glow.classList.add('donate-mode');
+      } else {
+        glow.classList.remove('donate-mode');
+      }
+    });
+    const donateEl = document.getElementById('donate-modal');
+    if (donateEl) donateObs.observe(donateEl, { attributes: true, attributeFilter: ['class'] });
+  })();
   // ── Init ───────────────────────────────────────────────────
   renderTemplateGrid();
   fetchAndRenderReviews();

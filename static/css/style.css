@@ -52,6 +52,64 @@ body {
   overflow-x: hidden;
 }
 
+/* ── Global Cursor Spotlight ──────────────────────────────── */
+.cursor-glow {
+  position: fixed;
+  width: 500px; height: 500px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  background: radial-gradient(circle, rgba(201,168,124,0.045) 0%, transparent 70%);
+  transform: translate(-50%, -50%);
+  transition: opacity 0.4s ease;
+  opacity: 0;
+  will-change: left, top;
+}
+.cursor-glow.active { opacity: 1; }
+.cursor-glow.donate-mode {
+  background: radial-gradient(circle, rgba(255,107,107,0.05) 0%, transparent 70%);
+}
+
+/* ── Universal Hover Micro-Animations ─────────────────────── */
+.btn { transition: all 0.25s var(--ease); }
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: translateY(0) scale(0.98); }
+
+.btn-primary:hover {
+  box-shadow: 0 6px 24px rgba(201,168,124,0.2);
+}
+.btn-secondary:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+.btn-ghost:hover {
+  background: rgba(255,255,255,0.04);
+}
+
+/* Chat bubbles */
+.chat-bubble { transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease); }
+.chat-bubble:hover { transform: translateX(2px); }
+.chat-bubble.system:hover { transform: translateX(-2px); }
+
+/* ATS keyword tags */
+.ats-gap-tag, .ats-match-tag { transition: all 0.2s var(--ease); }
+.ats-gap-tag:hover { transform: scale(1.08); box-shadow: 0 2px 8px rgba(248,113,113,0.2); }
+.ats-match-tag:hover { transform: scale(1.08); box-shadow: 0 2px 8px rgba(74,222,128,0.15); }
+
+/* Donate chips */
+.donate-chip { transition: all 0.25s ease, transform 0.2s ease; }
+.donate-chip:hover { transform: translateY(-2px) scale(1.05); }
+
+/* Nav links */
+.nav-links a { transition: color 0.2s var(--ease), transform 0.2s var(--ease); }
+.nav-links a:hover { transform: translateY(-1px); }
+
+/* Review cards */
+.review-card { transition: all 0.35s var(--ease); }
+
+/* Upload zone */
+.upload-zone { transition: all 0.25s var(--ease); }
+.upload-zone:hover { transform: scale(1.01); }
+
 a { color: var(--accent); text-decoration: none; }
 a:hover { color: var(--accent-hover); }
 
