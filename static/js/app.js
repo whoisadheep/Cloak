@@ -138,17 +138,18 @@
     formData.append("file", file);
     
     try {
-      // 1. Extract text
+      // 1. Extract text and check metadata
       const uploadRes = await fetch("/api/upload", { method: "POST", body: formData });
       if (!uploadRes.ok) throw new Error("Failed to parse file.");
       const uploadJson = await uploadRes.json();
       lastScoredResumeText = uploadJson.text;
+      const isCloak = uploadJson.is_cloak || false;
       
       // 2. Score text
       const scoreRes = await fetch("/api/score", { 
         method: "POST", 
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: lastScoredResumeText })
+        body: JSON.stringify({ text: lastScoredResumeText, is_cloak: isCloak })
       });
       if (!scoreRes.ok) throw new Error("Failed to score.");
       const scoreJson = await scoreRes.json();

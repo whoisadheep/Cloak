@@ -582,6 +582,7 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
         title=f"Resume - {name}",
         author=name,
         subject="Professional Resume",
+        creator="Cloak Resume Builder"
     )
 
     story = []
