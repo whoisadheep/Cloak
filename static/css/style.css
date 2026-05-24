@@ -1001,7 +1001,7 @@ a:hover { color: var(--accent-hover); }
    ============================================================ */
 #view-template {
   padding-top: 56px; align-items: center;
-  position: relative; overflow-y: auto;
+  position: relative;
 }
 
 /* ── Particle Canvas (same as landing) ── */
