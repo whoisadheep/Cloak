@@ -858,6 +858,8 @@ a:hover { color: var(--accent-hover); }
   background: var(--bg-2); border: 1px solid var(--border);
   border-radius: var(--radius-lg); padding: 32px;
   max-width: 440px; width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 .modal-title { font-size: 1.05rem; font-weight: 600; margin-bottom: 6px; }
 .modal-desc { font-size: .82rem; color: var(--text-2); margin-bottom: 20px; line-height: 1.6; }
