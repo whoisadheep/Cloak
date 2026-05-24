@@ -341,9 +341,10 @@
       </div>
       
       <div id="score-results" style="display: none;">
-        <div class="modal-title">Your Resume Score</div>
+        <div class="modal-title" style="font-size: 1.2rem; margin-bottom: 24px; color: var(--text-0);">Your Resume Score</div>
         
-        <div class="score-circle-wrap">
+        <div class="score-circle-wrap" id="score-circle-container">
+          <div class="score-circle-glow"></div>
           <svg class="score-circle" viewBox="0 0 100 100">
             <circle class="score-circle-bg" cx="50" cy="50" r="45"></circle>
             <circle class="score-circle-prog" cx="50" cy="50" r="45" stroke-dasharray="283" stroke-dashoffset="283"></circle>
@@ -351,23 +352,29 @@
           <div class="score-number" id="score-number-display">0</div>
         </div>
         
-        <div class="score-lists" style="text-align: left; display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px;">
-          <div class="score-pros">
-            <h4 style="color: #4ade80; margin-bottom: 8px;">What looks great:</h4>
-            <ul id="score-pros-list" style="margin:0; padding-left:20px; font-size:0.9rem; color:var(--text-1);"></ul>
+        <div class="score-lists" style="text-align: left; display: flex; flex-direction: column; gap: 20px; margin-bottom: 28px;">
+          <div class="score-pros animate-up" style="animation-delay: 0.1s;">
+            <h4 style="color: var(--success); margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+              What looks great
+            </h4>
+            <ul id="score-pros-list" class="premium-list"></ul>
           </div>
-          <div class="score-cons">
-            <h4 style="color: #FF6B6B; margin-bottom: 8px;">Areas for improvement:</h4>
-            <ul id="score-cons-list" style="margin:0; padding-left:20px; font-size:0.9rem; color:var(--text-1);"></ul>
+          <div class="score-cons animate-up" style="animation-delay: 0.2s;">
+            <h4 style="color: var(--error); margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Areas for improvement
+            </h4>
+            <ul id="score-cons-list" class="premium-list"></ul>
           </div>
         </div>
 
-        <div style="background: var(--bg-2); padding: 16px; border-radius: 8px; margin-bottom: 24px; border: 1px solid var(--border);">
-          <div id="score-cta-title" style="font-weight: 600; color: var(--text-0); margin-bottom: 8px;">Want a 95+ score?</div>
-          <div id="score-cta-desc" style="font-size: 0.9rem; color: var(--text-2);">Let Cloak rebuild your resume to ATS perfection for free.</div>
+        <div class="premium-cta-box animate-up" style="animation-delay: 0.3s;">
+          <div id="score-cta-title" style="font-weight: 600; color: var(--text-0); margin-bottom: 6px; font-size: 1.05rem;">Want a 95+ score?</div>
+          <div id="score-cta-desc" style="font-size: 0.9rem; color: var(--text-2); line-height: 1.5;">Let Cloak rebuild your resume to ATS perfection for free.</div>
         </div>
 
-        <div style="display:flex; flex-direction: column; gap: 10px;">
+        <div class="animate-up" style="animation-delay: 0.4s; display:flex; flex-direction: column; gap: 10px;">
           <button class="btn btn-primary" id="btn-rebuild-resume" style="width: 100%; justify-content: center;">Rebuild Resume with AI</button>
           <button class="btn btn-ghost" id="btn-score-close" style="width: 100%;">Maybe later</button>
         </div>

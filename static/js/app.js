@@ -169,6 +169,7 @@
         else if (scoreJson.score > 85) color = "#4ade80";
         $(".score-circle-prog").style.stroke = color;
         $("#score-number-display").style.color = color;
+        $(".score-circle-glow").style.background = color;
       }, 100);
       
       // Render lists
