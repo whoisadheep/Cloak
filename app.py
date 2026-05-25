@@ -20,6 +20,9 @@ from flask import (
     Flask, request, Response, jsonify,
     render_template, send_file
 )
+from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from google import genai
 from dotenv import load_dotenv
 
@@ -31,6 +34,24 @@ from cloak_chat import SYSTEM_PROMPT, STUDENT_RULES, LIVE_PREVIEW_INSTRUCTION
 from resume_terminal import build_pdf, analyze_ats_gaps
 
 app = Flask(__name__)
+
+# Security: CORS, Rate Limiting, and Upload Limits
+CORS(app)
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5 MB max upload
+
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://"
+)
+
+@app.after_request
+def add_security_headers(response):
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    return response
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 DATABASE_URL = os.environ.get("DATABASE_URL")
@@ -83,6 +104,7 @@ def index():
 
 
 @app.route("/api/chat", methods=["POST"])
+@limiter.limit("30 per day; 5 per minute")
 def chat():
     """Stream chat responses from Gemini using the Cloak system prompt."""
     data = request.json
@@ -193,6 +215,7 @@ def chat():
 
 
 @app.route("/api/upload", methods=["POST"])
+@limiter.limit("20 per day")
 def upload_file():
     """Extract text from an uploaded PDF or TXT file."""
     if 'file' not in request.files:
@@ -220,9 +243,11 @@ def upload_file():
             
         return jsonify({"text": text.strip(), "is_cloak": is_cloak})
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"[UPLOAD ERROR] {e}", flush=True)
+        return jsonify({"error": "Failed to process the uploaded file."}), 500
 
 @app.route("/api/extract-url", methods=["POST"])
+@limiter.limit("20 per day")
 def extract_url():
     """Extract clean markdown text from a URL using Jina Reader API."""
     data = request.json
@@ -246,6 +271,7 @@ def extract_url():
         return jsonify({"error": "Failed to scrape the URL. The site might be blocking access."}), 500
 
 @app.route("/api/generate", methods=["POST"])
+@limiter.limit("20 per day; 3 per minute")
 def generate_pdf():
     """Generate a PDF resume from user data and return it as a download."""
     data = request.json
@@ -272,7 +298,8 @@ def generate_pdf():
             },
         )
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"[GENERATE ERROR] {e}", flush=True)
+        return jsonify({"error": "Failed to generate PDF resume."}), 500
     finally:
         try:
             os.unlink(tmp_path)
@@ -281,6 +308,7 @@ def generate_pdf():
 
 
 @app.route("/api/ats", methods=["POST"])
+@limiter.limit("20 per day")
 def ats_analysis():
     """Run ATS gap analysis between user data and a job description."""
     data = request.json
@@ -295,6 +323,7 @@ def ats_analysis():
 
 
 @app.route("/api/score", methods=["POST"])
+@limiter.limit("20 per day")
 def score_resume():
     """Score raw resume text and return a strict JSON response."""
     data = request.json or {}
@@ -365,6 +394,7 @@ Resume Text:
 
 
 @app.route("/api/tailor", methods=["POST"])
+@limiter.limit("10 per day; 2 per minute")
 def tailor_resume():
     """Use Gemini to rewrite resume data, weaving in missing ATS keywords."""
     data = request.json or {}
@@ -424,7 +454,7 @@ Return the updated JSON now:"""
         return jsonify({"error": "AI returned invalid JSON. Please try again."}), 500
     except Exception as e:
         print(f"[TAILOR ERROR] {e}", flush=True)
-        return jsonify({"error": f"Tailoring failed: {str(e)[:120]}"}), 500
+        return jsonify({"error": "Tailoring failed due to an internal error."}), 500
 
 
 @app.route("/api/reviews", methods=["GET"])

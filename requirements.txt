@@ -9,3 +9,5 @@ anthropic
 PyPDF2
 psycopg2-binary
 requests
+flask-limiter
+flask-cors
