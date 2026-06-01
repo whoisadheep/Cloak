@@ -716,6 +716,8 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
             degree_field = edu.get("degree", "")
             if edu.get("field"):
                 degree_field += f", {edu['field']}"
+            if edu.get("percentage"):
+                degree_field += f"  •  {edu['percentage']}"
             
             if R.get("single_column"):
                 tbl = Table(

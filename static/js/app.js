@@ -218,7 +218,17 @@
   
   document.getElementById("btn-edit-json").addEventListener("click", () => {
     editJsonText.value = JSON.stringify(state.userData, null, 2);
+    document.getElementById("edit-preview-content").innerHTML = generatePreviewHtml(state.userData);
     editModal.classList.add("visible");
+  });
+
+  editJsonText.addEventListener("input", () => {
+    try {
+      const data = JSON.parse(editJsonText.value);
+      document.getElementById("edit-preview-content").innerHTML = generatePreviewHtml(data);
+    } catch (e) {
+      // ignore invalid JSON while typing
+    }
   });
 
   document.getElementById("btn-edit-cancel").addEventListener("click", () => {
@@ -916,11 +926,8 @@ User's message: ${text}`;
   }
 
   // ── Preview Panel ─────────────────────────────────────────
-  function renderPreview(data) {
-    if (!data) return;
-    previewEmpty.style.display = "none";
-    previewBody.style.display = "block";
-
+  function generatePreviewHtml(data) {
+    if (!data) return "";
     let html = `<div class="true-preview-paper">`;
 
     if (data.personal) {
@@ -1053,7 +1060,14 @@ User's message: ${text}`;
     }
 
     html += `</div>`;
-    previewBody.innerHTML = html;
+    return html;
+  }
+
+  function renderPreview(data) {
+    if (!data) return;
+    previewEmpty.style.display = "none";
+    previewBody.style.display = "block";
+    previewBody.innerHTML = generatePreviewHtml(data);
   }
 
   function capitalize(s) {
