@@ -713,11 +713,17 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
         edu_block = []
         section_header(edu_block, "Education", styles)
         for edu in user_data["education"]:
-            degree_field = edu.get("degree", "")
+            parts = []
+            if edu.get("degree"):
+                parts.append(str(edu["degree"]))
             if edu.get("field"):
-                degree_field += f", {edu['field']}"
+                parts.append(str(edu["field"]))
+            degree_field = ", ".join(parts)
             if edu.get("percentage"):
-                degree_field += f"  •  {edu['percentage']}"
+                if degree_field:
+                    degree_field += f"  •  {edu['percentage']}"
+                else:
+                    degree_field = str(edu["percentage"])
             
             if R.get("single_column"):
                 tbl = Table(
@@ -731,6 +737,8 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
                     ])
                 )
                 edu_block.append(tbl)
+                if degree_field:
+                    edu_block.append(Paragraph(degree_field, styles["job_title"]))
             else:
                 # Year right-aligned, then institution + degree below
                 year_str = edu.get("year", "")
@@ -742,7 +750,8 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
                     )))
                     edu_block.append(HRFlowable(width="99%", thickness=0.5, color=HexColor(P["rule"]), spaceAfter=3, spaceBefore=1))
                 edu_block.append(Paragraph(f"<b>{edu.get('institution', '')}</b>", styles["body"]))
-                edu_block.append(Paragraph(degree_field, styles["job_title"]))
+                if degree_field:
+                    edu_block.append(Paragraph(degree_field, styles["job_title"]))
                 
                 # Show location if available
                 loc = edu.get("location", "")
