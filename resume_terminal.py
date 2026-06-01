@@ -561,6 +561,13 @@ def apply_template(template_name: str):
 
 def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None):
     """Render the resume PDF using Stitch design tokens."""
+
+    # Safe-string helper: converts None → "" so Paragraph/concat never crashes
+    def _s(val, default=""):
+        if val is None:
+            return default
+        return str(val)
+
     apply_template(user_data.get("template", "Sovereign Executive"))
     
     S = STITCH_TOKENS["spacing"]
@@ -570,7 +577,7 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
     R = STITCH_TOKENS["rules"]
 
     personal = user_data.get("personal") or user_data.get("personal_info") or user_data.get("personalInfo") or user_data.get("Personal Info") or user_data
-    name = personal.get("name") or user_data.get("name", "Candidate")
+    name = _s(personal.get("name")) or _s(user_data.get("name")) or "Candidate"
 
     doc = SimpleDocTemplate(
         output_path,
@@ -590,7 +597,7 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
     name_str = name.upper() if R.get("header_uppercase") else name
     story.append(Paragraph(name_str, styles["name"]))
     
-    title_str = personal.get('title', '')
+    title_str = _s(personal.get('title'))
     if title_str and R.get("header_uppercase"): title_str = title_str.upper()
     
     if not R.get("single_column"):
@@ -605,10 +612,10 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
         def _fmt_contact(char, text):
             return f"<font backColor='#1A2639' color='white'>&nbsp;<b>{char}</b>&nbsp;</font> {text}"
             
-        if personal.get("phone"): contact_parts.append(_fmt_contact("P", personal.get("phone")))
-        if personal.get("email"): contact_parts.append(_fmt_contact("E", personal.get("email")))
-        if personal.get("location"): contact_parts.append(_fmt_contact("A", personal.get("location")))
-        if personal.get("linkedin"): contact_parts.append(_fmt_contact("W", personal.get("linkedin")))
+        if personal.get("phone"): contact_parts.append(_fmt_contact("P", _s(personal.get("phone"))))
+        if personal.get("email"): contact_parts.append(_fmt_contact("E", _s(personal.get("email"))))
+        if personal.get("location"): contact_parts.append(_fmt_contact("A", _s(personal.get("location"))))
+        if personal.get("linkedin"): contact_parts.append(_fmt_contact("W", _s(personal.get("linkedin"))))
         
         contact_line = " &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ".join(contact_parts)
         story.append(Paragraph(contact_line, styles["contact"]))
@@ -616,14 +623,14 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
         story.append(HRFlowable(width="100%", thickness=2, color=HexColor("#C4D6E0"), spaceBefore=2, spaceAfter=12))
     else:
         story.append(Paragraph(
-            f"{title_str}  ·  {personal.get('location', '')}",
+            f"{title_str}  ·  {_s(personal.get('location'))}",
             styles["tagline"]
         ))
         contact_line = "  ·  ".join(filter(None, [
-            personal.get("email", ""),
-            personal.get("phone", ""),
-            personal.get("linkedin", ""),
-            personal.get("github", ""),
+            _s(personal.get("email")),
+            _s(personal.get("phone")),
+            _s(personal.get("linkedin")),
+            _s(personal.get("github")),
         ]))
         story.append(Paragraph(contact_line, styles["contact"]))
         story.append(HRFlowable(
@@ -647,7 +654,7 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
     if user_data.get("summary"):
         summary_block = []
         section_header(summary_block, "Objective" if not R.get("single_column") else "Professional Summary", styles)
-        summary_block.append(Paragraph(user_data["summary"], styles["body"]))
+        summary_block.append(Paragraph(_s(user_data["summary"]), styles["body"]))
         summary_block.append(Spacer(1, 8))
         add_to_flow(summary_block, "left")
 
@@ -657,9 +664,9 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
             if i == 0:
                 section_header(entry_block, "Projects", styles)
 
-            link_str = proj.get("link", "")
+            link_str = _s(proj.get("link"))
             tbl = Table(
-                [[Paragraph(proj.get("name", ""), styles["company"]),
+                [[Paragraph(_s(proj.get("name")), styles["company"]),
                   Paragraph(link_str, styles["date_line"])]],
                 colWidths=["60%", "40%"],
                 style=TableStyle([
@@ -672,9 +679,9 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
             )
             entry_block.append(tbl)
             if proj.get("tech"):
-                entry_block.append(Paragraph(f"<b>Tech:</b> {proj['tech']}", styles["job_title"]))
-            for bullet in proj.get("bullets", []):
-                entry_block.append(Paragraph(f"• {bullet}", styles["bullet"]))
+                entry_block.append(Paragraph(f"<b>Tech:</b> {_s(proj['tech'])}", styles["job_title"]))
+            for bullet in proj.get("bullets") or []:
+                entry_block.append(Paragraph(f"• {_s(bullet)}", styles["bullet"]))
             entry_block.append(Spacer(1, S["item_gap"]))
             add_to_flow(entry_block, "left")
 
@@ -683,12 +690,12 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
             entry_block = []
             if i == 0:
                 section_header(entry_block, "Experience", styles)
-            end_str = exp.get("end", "Present")
-            date_str = f"{exp.get('start', '')} - {end_str}"
-            loc_str  = exp.get("location", "")
+            end_str = _s(exp.get("end"), "Present")
+            date_str = f"{_s(exp.get('start'))} - {end_str}"
+            loc_str  = _s(exp.get("location"))
 
             tbl = Table(
-                [[Paragraph(exp.get("company", ""), styles["company"]),
+                [[Paragraph(_s(exp.get("company")), styles["company"]),
                   Paragraph(date_str, styles["date_line"])]],
                 colWidths=["70%", "30%"],
                 style=TableStyle([
@@ -700,16 +707,15 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
                 ])
             )
             entry_block.append(tbl)
-            title_val = exp.get("title") or exp.get("role") or ""
-            title_loc = str(title_val)
+            title_loc = _s(exp.get("title")) or _s(exp.get("role"))
             if loc_str:
                 if title_loc:
                     title_loc += f"  •  {loc_str}"
                 else:
-                    title_loc = str(loc_str)
+                    title_loc = loc_str
             entry_block.append(Paragraph(title_loc, styles["job_title"]))
-            for bullet in exp.get("bullets", []):
-                entry_block.append(Paragraph(f"• {bullet}", styles["bullet"]))
+            for bullet in exp.get("bullets") or []:
+                entry_block.append(Paragraph(f"• {_s(bullet)}", styles["bullet"]))
             entry_block.append(Spacer(1, S["item_gap"]))
             add_to_flow(entry_block, "left")
 
@@ -731,8 +737,8 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
             
             if R.get("single_column"):
                 tbl = Table(
-                    [[Paragraph(edu.get("institution", ""), styles["company"]),
-                      Paragraph(edu.get("year", ""), styles["date_line"])]],
+                    [[Paragraph(_s(edu.get("institution")), styles["company"]),
+                      Paragraph(_s(edu.get("year")), styles["date_line"])]],
                     colWidths=["70%", "30%"],
                     style=TableStyle([
                         ("VALIGN", (0, 0), (-1, -1), "TOP"),
@@ -745,7 +751,7 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
                     edu_block.append(Paragraph(degree_field, styles["job_title"]))
             else:
                 # Year right-aligned, then institution + degree below
-                year_str = edu.get("year", "")
+                year_str = _s(edu.get("year"))
                 if year_str:
                     edu_block.append(Spacer(1, 4))
                     edu_block.append(Paragraph(year_str, ParagraphStyle(
@@ -753,12 +759,12 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
                         textColor=HexColor(P["ink"]), alignment=TA_RIGHT,
                     )))
                     edu_block.append(HRFlowable(width="99%", thickness=0.5, color=HexColor(P["rule"]), spaceAfter=3, spaceBefore=1))
-                edu_block.append(Paragraph(f"<b>{edu.get('institution', '')}</b>", styles["body"]))
+                edu_block.append(Paragraph(f"<b>{_s(edu.get('institution'))}</b>", styles["body"]))
                 if degree_field:
                     edu_block.append(Paragraph(degree_field, styles["job_title"]))
                 
                 # Show location if available
-                loc = edu.get("location", "")
+                loc = _s(edu.get("location"))
                 if loc:
                     edu_block.append(Spacer(1, 4))
                     edu_block.append(Paragraph(loc, styles["body"]))
@@ -769,10 +775,31 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
     if user_data.get("skills"):
         skills_block = []
         section_header(skills_block, "Key Skills" if not R.get("single_column") else "Skills", styles)
+        skills_data = user_data["skills"]
+        # Handle skills as list of objects or dict
+        if isinstance(skills_data, dict):
+            skills_items = skills_data.items()
+        elif isinstance(skills_data, list):
+            # Convert list format [{"category": "X", "items": [...]}] to pairs
+            skills_items = []
+            for sk in skills_data:
+                if isinstance(sk, dict):
+                    cat = _s(sk.get("category") or sk.get("name") or "Skills")
+                    items = sk.get("items") or sk.get("skills") or []
+                    if isinstance(items, list):
+                        skills_items.append((cat, [_s(i) for i in items]))
+                    else:
+                        skills_items.append((cat, [_s(items)]))
+                elif isinstance(sk, str):
+                    skills_items.append(("Skills", [sk]))
+        else:
+            skills_items = []
+
         if R.get("single_column"):
-            for category, skill_list in user_data["skills"].items():
-                skills_str = " • ".join(skill_list)
-                skills_block.append(Paragraph(f'<b>{category}:</b>  {skills_str}', styles["skills_val"]))
+            for category, skill_list in skills_items:
+                safe_list = [_s(s) for s in (skill_list if isinstance(skill_list, list) else [skill_list])]
+                skills_str = " • ".join(safe_list)
+                skills_block.append(Paragraph(f'<b>{_s(category)}:</b>  {skills_str}', styles["skills_val"]))
         else:
             # For two-column: render each skill as individual bullet
             skill_style = ParagraphStyle(
@@ -780,9 +807,9 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
                 fontSize=8.5, leading=11,
                 textColor=HexColor(P["ink_light"]),
             )
-            for category, skill_list in user_data["skills"].items():
-                # Category as a label
-                skills_block.append(Paragraph(f'<b>• {category}:</b> {" • ".join(skill_list)}', skill_style))
+            for category, skill_list in skills_items:
+                safe_list = [_s(s) for s in (skill_list if isinstance(skill_list, list) else [skill_list])]
+                skills_block.append(Paragraph(f'<b>• {_s(category)}:</b> {" • ".join(safe_list)}', skill_style))
         add_to_flow(skills_block, "right")
 
     if user_data.get("certifications"):
@@ -791,8 +818,8 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
         for cert in user_data["certifications"]:
             if R.get("single_column"):
                 tbl = Table(
-                    [[Paragraph(cert.get("name", ""), styles["cert_name"]),
-                      Paragraph(cert.get("year", ""), styles["date_line"])]],
+                    [[Paragraph(_s(cert.get("name")), styles["cert_name"]),
+                      Paragraph(_s(cert.get("year")), styles["date_line"])]],
                     colWidths=["70%", "30%"],
                     style=TableStyle([
                         ("VALIGN", (0, 0), (-1, -1), "TOP"),
@@ -802,9 +829,9 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
                 )
                 cert_block.append(tbl)
             else:
-                cert_block.append(Paragraph(cert.get("year", ""), styles["date_line"]))
-                cert_block.append(Paragraph(cert.get("name", ""), styles["cert_name"]))
-            cert_block.append(Paragraph(cert.get("issuer", ""), styles["cert_meta"]))
+                cert_block.append(Paragraph(_s(cert.get("year")), styles["date_line"]))
+                cert_block.append(Paragraph(_s(cert.get("name")), styles["cert_name"]))
+            cert_block.append(Paragraph(_s(cert.get("issuer")), styles["cert_meta"]))
         add_to_flow(cert_block, "right")
 
     if not R.get("single_column"):

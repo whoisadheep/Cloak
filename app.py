@@ -308,8 +308,14 @@ def generate_pdf():
             },
         )
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         print(f"[GENERATE ERROR] {e}", flush=True)
-        return jsonify({"error": "Failed to generate PDF resume."}), 500
+        print(f"[GENERATE DATA] personal={user_data.get('personal')}", flush=True)
+        print(f"[GENERATE DATA] experience={user_data.get('experience')}", flush=True)
+        print(f"[GENERATE DATA] education={user_data.get('education')}", flush=True)
+        print(f"[GENERATE DATA] skills_type={type(user_data.get('skills'))}", flush=True)
+        return jsonify({"error": f"Failed to generate PDF resume. ({type(e).__name__}: {e})"}), 500
     finally:
         try:
             os.unlink(tmp_path)
