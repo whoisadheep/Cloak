@@ -700,9 +700,13 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
                 ])
             )
             entry_block.append(tbl)
-            title_loc = exp.get("title", exp.get("role", ""))
+            title_val = exp.get("title") or exp.get("role") or ""
+            title_loc = str(title_val)
             if loc_str:
-                title_loc += f"  •  {loc_str}"
+                if title_loc:
+                    title_loc += f"  •  {loc_str}"
+                else:
+                    title_loc = str(loc_str)
             entry_block.append(Paragraph(title_loc, styles["job_title"]))
             for bullet in exp.get("bullets", []):
                 entry_block.append(Paragraph(f"• {bullet}", styles["bullet"]))
