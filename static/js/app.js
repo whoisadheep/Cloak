@@ -740,6 +740,7 @@ User's message: ${text}`;
         body: JSON.stringify({
           messages: trimmedMessages,
           student_mode: state.studentMode,
+          current_state: state.userData
         }),
       });
 

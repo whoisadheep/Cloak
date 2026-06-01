@@ -121,6 +121,10 @@ def chat():
     system_instruction = SYSTEM_PROMPT.strip() + "\n\n" + LIVE_PREVIEW_INSTRUCTION.strip()
     if student_mode:
         system_instruction += "\n\n" + STUDENT_RULES.strip()
+        
+    current_state = data.get("current_state")
+    if current_state:
+        system_instruction += f"\n\nCURRENT RESUME JSON STATE:\n```json\n{json.dumps(current_state)}\n```\nMake all subsequent modifications based on this current state, retaining user edits."
 
     client = genai.Client(api_key=GEMINI_API_KEY)
 
