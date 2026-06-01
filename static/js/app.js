@@ -1001,8 +1001,19 @@ User's message: ${text}`;
           <div class="tp-item-header">
             <span class="tp-item-title">${escapeHtml(e.institution || '')}</span>
             <span class="tp-item-date">${escapeHtml(e.year || '')}</span>
-          </div>
-          <div class="tp-item-sub">${escapeHtml(e.degree || '')}${e.gpa ? ' | GPA: ' + escapeHtml(e.gpa) : ''}</div>
+          </div>`;
+          let degreeField = [];
+          if (e.degree) degreeField.push(e.degree);
+          if (e.field) degreeField.push(e.field);
+          let degreeStr = escapeHtml(degreeField.join(", "));
+          if (e.percentage) {
+            if (degreeStr) degreeStr += ` &nbsp;&bull;&nbsp; ${escapeHtml(e.percentage)}`;
+            else degreeStr = escapeHtml(e.percentage);
+          }
+          if (e.gpa) {
+            degreeStr += ` | GPA: ${escapeHtml(e.gpa)}`;
+          }
+          html += `<div class="tp-item-sub">${degreeStr}</div>
         </div>`;
       });
       html += `</div>`;

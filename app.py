@@ -158,8 +158,11 @@ def chat():
                     r"CLOAK_JSON_START(.*?)CLOAK_JSON_END", full_response, re.DOTALL
                 )
                 if match:
+                    raw_final = match.group(1).strip()
+                    raw_final = re.sub(r"^```(?:json)?\s*", "", raw_final)
+                    raw_final = re.sub(r"\s*```$", "", raw_final)
                     try:
-                        final_json = json.loads(match.group(1).strip())
+                        final_json = json.loads(raw_final)
                     except json.JSONDecodeError:
                         pass
 
@@ -169,8 +172,11 @@ def chat():
                 r"<live_preview>(.*?)</live_preview>", full_response, re.DOTALL
             )
             if preview_match:
+                raw_preview = preview_match.group(1).strip()
+                raw_preview = re.sub(r"^```(?:json)?\s*", "", raw_preview)
+                raw_preview = re.sub(r"\s*```$", "", raw_preview)
                 try:
-                    live_preview = json.loads(preview_match.group(1).strip())
+                    live_preview = json.loads(raw_preview)
                 except json.JSONDecodeError:
                     pass
 
