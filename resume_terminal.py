@@ -834,6 +834,67 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
             cert_block.append(Paragraph(_s(cert.get("issuer")), styles["cert_meta"]))
         add_to_flow(cert_block, "right")
 
+    # ── Custom / Extra Sections ──────────────────────────────
+    standard_keys = {"personal", "personal_info", "personalInfo", "Personal Info",
+                     "summary", "experience", "projects", "education",
+                     "skills", "certifications", "template", "name"}
+    for key in user_data:
+        if key in standard_keys:
+            continue
+        section_data = user_data[key]
+        if not section_data:
+            continue
+
+        custom_block = []
+        # Pretty-print the section title
+        section_title = key.replace("_", " ").replace("-", " ").title()
+        section_header(custom_block, section_title, styles)
+
+        if isinstance(section_data, list):
+            for item in section_data:
+                if isinstance(item, dict):
+                    # Header row: name/title + year/date
+                    item_name = _s(item.get("name") or item.get("title"))
+                    item_date = _s(item.get("year") or item.get("date"))
+                    if item_name or item_date:
+                        if R.get("single_column"):
+                            tbl = Table(
+                                [[Paragraph(item_name, styles["company"]),
+                                  Paragraph(item_date, styles["date_line"])]],
+                                colWidths=["70%", "30%"],
+                                style=TableStyle([
+                                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                                    ("LEFTPADDING", (0, 0), (-1, -1), 0),
+                                    ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+                                    ("TOPPADDING", (0, 0), (-1, -1), 0),
+                                    ("BOTTOMPADDING", (0, 0), (-1, -1), 1),
+                                ])
+                            )
+                            custom_block.append(tbl)
+                        else:
+                            if item_date:
+                                custom_block.append(Paragraph(item_date, styles["date_line"]))
+                            custom_block.append(Paragraph(f"<b>{item_name}</b>", styles["body"]))
+
+                    # Subtitle line
+                    subtitle = _s(item.get("subtitle") or item.get("issuer")
+                                  or item.get("organization") or item.get("description"))
+                    if subtitle:
+                        custom_block.append(Paragraph(subtitle, styles["job_title"]))
+
+                    # Bullets
+                    for bullet in item.get("bullets") or []:
+                        custom_block.append(Paragraph(f"• {_s(bullet)}", styles["bullet"]))
+
+                    custom_block.append(Spacer(1, S["item_gap"]))
+                elif isinstance(item, str):
+                    custom_block.append(Paragraph(f"• {_s(item)}", styles["bullet"]))
+        elif isinstance(section_data, str):
+            custom_block.append(Paragraph(_s(section_data), styles["body"]))
+
+        if len(custom_block) > 1:  # More than just the header
+            add_to_flow(custom_block, "left")
+
     if not R.get("single_column"):
         content_width = letter[0] - S["margin_left"] * inch - S["margin_right"] * inch
         col_ratio = 0.62
