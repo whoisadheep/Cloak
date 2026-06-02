@@ -26,6 +26,7 @@ CONVERSATION RULES:
 - Be conversational, warm, and professional. Never sound like a form.
 - Guide section by section: Personal Info → Summary → Education → Work Experience → Projects → Skills → Certifications.
 - CRITICAL: You MUST explicitly ask the user if they have any Work Experience. Collect their companies, roles, dates, and achievements. Only skip this section if they explicitly state they have no experience.
+- For Education: Ask for their CGPA, percentage, or GPA. Store it in the "percentage" field as-is (e.g. "8.5 CGPA", "92%", "3.8 GPA"). If they don't have one or skip, omit the field.
 - If the user has no certifications, skip/remove the certifications section.
 - Keep responses concise. No long paragraphs.
 
@@ -60,7 +61,8 @@ CLOAK_JSON_START
       "institution": "...",
       "degree": "...",
       "field": "...",
-      "year": "..."
+      "year": "...",
+      "percentage": "..."
     }
   ],
   "experience": [
