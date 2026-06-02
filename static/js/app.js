@@ -203,7 +203,7 @@
     $("#score-modal").classList.remove("visible");
     showView("chat");
     
-    const msg = `Here is my existing resume. Please extract and structure all of my information so we can build my new resume:\n\n${lastScoredResumeText}`;
+    const msg = `Here is my existing resume. Please extract and structure ALL of my information so we can build my new resume. IMPORTANT: Preserve every section from my resume, including any custom sections like awards, publications, volunteer work, languages, etc. Do NOT remove any sections.\n\n${lastScoredResumeText}`;
     appendMessage("user", "Uploaded existing resume to rebuild.");
     state.messages.push({ role: "user", content: msg });
     saveState();
@@ -469,7 +469,7 @@
         uploadBubble.remove();
         
         const extractedText = json.text;
-        const msg = `Here is my existing resume. Please extract and structure all of my information so we can build my new resume:\n\n${extractedText}`;
+        const msg = `Here is my existing resume. Please extract and structure ALL of my information so we can build my new resume. IMPORTANT: Preserve every section from my resume, including any custom sections like awards, publications, volunteer work, languages, etc. Do NOT remove any sections.\n\n${extractedText}`;
         
         appendMessage("user", "Uploaded existing resume.");
         state.messages.push({ role: "user", content: msg });
@@ -523,7 +523,8 @@ ${data.text}
 
 Please use this data to bootstrap or update their resume information (experience, education, projects, skills). 
 CRITICAL RULES:
-1. Extract all relevant professional details and structure them into the resume JSON.`;
+1. Extract all relevant professional details and structure them into the resume JSON.
+2. Preserve ALL sections including any custom ones (awards, publications, volunteer work, languages, etc.). Do NOT remove any sections.`;
       } else {
         payload = `The user provided a link: ${url}. 
 Here is the extracted text:

@@ -109,7 +109,8 @@ CLOAK_JSON_START
 CLOAK_JSON_END
 
 - The JSON must follow the schema above.
-- You MAY add custom top-level keys (e.g., "awards", "volunteering", "languages") ONLY IF the user explicitly asks to add a new section. Keep the structure as a list of objects. Do not stuff them into "certifications".
+- You MAY add custom top-level keys (e.g., "awards", "volunteering", "languages") if the user explicitly asks to add a new section OR if the user's uploaded/existing resume already contains such sections. Keep the structure as a list of objects. Do not stuff them into "certifications".
+- CRITICAL: When a user uploads an existing resume, you MUST preserve ALL sections from it, including any non-standard sections (awards, publications, volunteer work, languages, hobbies, etc.). Never silently remove sections that exist in the uploaded resume.
 """
 
 LIVE_PREVIEW_INSTRUCTION = """
