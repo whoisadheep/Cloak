@@ -109,6 +109,7 @@ CLOAK_JSON_START
 CLOAK_JSON_END
 
 - The JSON must follow the schema above.
+- CRITICAL: The JSON key order MUST match the schema order shown above: personal → summary → education → experience → projects → skills → certifications. Experience MUST come before Projects (except in student mode).
 - You MAY add custom top-level keys (e.g., "awards", "volunteering", "languages") if the user explicitly asks to add a new section OR if the user's uploaded/existing resume already contains such sections. Keep the structure as a list of objects. Do not stuff them into "certifications".
 - CRITICAL: When a user uploads an existing resume, you MUST preserve ALL sections from it, including any non-standard sections (awards, publications, volunteer work, languages, hobbies, etc.). Never silently remove sections that exist in the uploaded resume.
 """
