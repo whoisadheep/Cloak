@@ -153,7 +153,30 @@
   </section>
 
   <!-- ============================================================
-       TEMPLATE VIEW
+       ONBOARDING VIEW (TEMPLATE SELECTION)
+       ============================================================ -->
+  <section id="view-onboarding" class="view">
+    <div class="template-glow"></div>
+    <div class="template-inner slide-up">
+      <div class="template-tag">Step 1</div>
+      <h2 class="template-heading">Choose your <em>design</em>.</h2>
+      <p class="template-sub">Select a template before we start building your resume.</p>
+
+      <div class="template-grid" id="onboarding-template-grid">
+        <!-- Injected by JS -->
+      </div>
+
+      <div style="text-align: right; margin-top: 40px;">
+        <button class="btn btn-primary" id="btn-onboarding-continue">
+          Continue to Builder
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       TEMPLATE VIEW (DOWNLOAD OPTIONS)
        ============================================================ -->
   <section id="view-template" class="view">
     <canvas id="template-particle-canvas"></canvas>
@@ -162,7 +185,7 @@
       <div style="margin-bottom: 16px;">
         <button class="btn btn-ghost" id="btn-template-back" style="padding-left:0;">
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M10 4L6 8l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Continue to Builder
+          Back to Chat
         </button>
       </div>
 

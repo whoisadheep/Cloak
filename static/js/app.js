@@ -114,8 +114,13 @@
 
   // ── Landing Handlers ──────────────────────────────────────
   $("#btn-start").addEventListener("click", () => {
-    renderTemplateGrid();
-    showView("template");
+    renderTemplateGrid("onboarding-template-grid");
+    showView("onboarding");
+  });
+
+  $("#btn-onboarding-continue").addEventListener("click", () => {
+    showView("chat");
+    sendInitialGreeting();
   });
 
   $("#btn-upload").addEventListener("click", () => {
@@ -556,9 +561,8 @@ Please extract any relevant resume information from this text.`;
   $("#btn-chat-back").addEventListener("click", () => showView("landing"));
   $("#btn-template-back").addEventListener("click", () => {
     showView("chat");
-    sendInitialGreeting();
   });
-  $("#btn-goto-template").addEventListener("click", () => { renderTemplateGrid(); showView("template"); });
+  $("#btn-goto-template").addEventListener("click", () => { renderTemplateGrid("template-grid"); showView("template"); });
   
   $("#btn-chat-reset").addEventListener("click", () => {
     if (confirm("Are you sure you want to clear this chat and start completely fresh?")) {
@@ -1161,8 +1165,11 @@ User's message: ${text}`;
   }
 
   // ── Template Grid ─────────────────────────────────────────
-  function renderTemplateGrid() {
-    templateGrid.innerHTML = TEMPLATES.map((t) => `
+  function renderTemplateGrid(containerId) {
+    const container = $("#" + containerId);
+    if (!container) return;
+
+    container.innerHTML = TEMPLATES.map((t) => `
       <div class="template-card ${t.id === state.selectedTemplate ? "selected" : ""}" data-template="${t.id}">
         <div class="template-card-img-wrap">
           <img src="${t.img}" alt="${t.name}" class="template-card-img">
@@ -1178,12 +1185,14 @@ User's message: ${text}`;
       </div>
     `).join("");
 
-    templateGrid.querySelectorAll(".template-card").forEach((card) => {
+    container.querySelectorAll(".template-card").forEach((card) => {
       card.addEventListener("click", () => {
         state.selectedTemplate = card.dataset.template;
         saveState();
-        templateGrid.querySelectorAll(".template-card").forEach((c) => c.classList.remove("selected"));
+        container.querySelectorAll(".template-card").forEach((c) => c.classList.remove("selected"));
         card.classList.add("selected");
+        // instantly update preview if we are viewing it
+        renderPreview(state.resumeData);
       });
     });
   }
