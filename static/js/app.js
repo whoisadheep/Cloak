@@ -113,7 +113,10 @@
   }
 
   // ── Landing Handlers ──────────────────────────────────────
-  $("#btn-start").addEventListener("click", () => showView("chat"));
+  $("#btn-start").addEventListener("click", () => {
+    renderTemplateGrid();
+    showView("template");
+  });
 
   $("#btn-upload").addEventListener("click", () => {
     $("#upload-modal").classList.add("visible");
@@ -551,7 +554,10 @@ Please extract any relevant resume information from this text.`;
 
   // ── Chat ──────────────────────────────────────────────────
   $("#btn-chat-back").addEventListener("click", () => showView("landing"));
-  $("#btn-template-back").addEventListener("click", () => showView("chat"));
+  $("#btn-template-back").addEventListener("click", () => {
+    showView("chat");
+    sendInitialGreeting();
+  });
   $("#btn-goto-template").addEventListener("click", () => { renderTemplateGrid(); showView("template"); });
   
   $("#btn-chat-reset").addEventListener("click", () => {
