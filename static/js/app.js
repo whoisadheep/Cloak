@@ -25,8 +25,8 @@
   };
 
   const TEMPLATES = [
-    { id: "Sovereign Executive", name: "Sovereign Executive", desc: "Minimalist, architectural whitespace, navy ink.", ats: "98" },
-    { id: "Modern Vanguard", name: "Modern Vanguard", desc: "Forest green accents, side-by-side photo layout, visionary feel.", ats: "95" }
+    { id: "Sovereign Executive", name: "Sovereign Executive", desc: "Minimalist, architectural whitespace, navy ink.", ats: "98", img: "/static/img/templates/sovereign.png" },
+    { id: "Modern Vanguard", name: "Modern Vanguard", desc: "Forest green accents, side-by-side photo layout, visionary feel.", ats: "95", img: "/static/img/templates/vanguard.png" }
   ];
 
   // ── DOM refs ───────────────────────────────────────────────
@@ -1158,12 +1158,17 @@ User's message: ${text}`;
   function renderTemplateGrid() {
     templateGrid.innerHTML = TEMPLATES.map((t) => `
       <div class="template-card ${t.id === state.selectedTemplate ? "selected" : ""}" data-template="${t.id}">
-        <div class="template-card-check">
-          <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="template-card-img-wrap">
+          <img src="${t.img}" alt="${t.name}" class="template-card-img">
+          <div class="template-card-check">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
         </div>
-        <div class="template-card-name">${t.name}</div>
-        <div class="template-card-desc">${t.desc}</div>
-        <div class="template-card-ats">ATS ${t.ats}/100</div>
+        <div class="template-card-content">
+          <div class="template-card-name">${t.name}</div>
+          <div class="template-card-desc">${t.desc}</div>
+          <div class="template-card-ats">ATS ${t.ats}/100</div>
+        </div>
       </div>
     `).join("");
 

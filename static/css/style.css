@@ -1113,8 +1113,10 @@ a:hover { color: var(--accent-hover); }
 
 .template-card {
   background: var(--bg-1); border: 1px solid var(--border);
-  border-radius: var(--radius-lg); padding: 24px 22px;
+  border-radius: var(--radius-lg); padding: 0;
   cursor: pointer; transition: all 0.35s var(--ease);
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column;
   position: relative; overflow: hidden;
   transform-style: preserve-3d;
   will-change: transform;
@@ -1138,8 +1140,35 @@ a:hover { color: var(--accent-hover); }
   z-index: 2;
 }
 .template-card.selected {
-  border-color: var(--accent); background: var(--accent-dim);
+  border-color: var(--accent);
   box-shadow: 0 0 20px rgba(201, 168, 124, 0.12);
+}
+
+.template-card-img-wrap {
+  width: 100%;
+  aspect-ratio: 8.5 / 11;
+  background: var(--surface-1);
+  overflow: hidden;
+  position: relative;
+  border-bottom: 1px solid var(--border);
+}
+.template-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s var(--ease);
+}
+.template-card:hover .template-card-img {
+  transform: scale(1.05);
+}
+
+.template-card-content {
+  padding: 20px;
+  background: var(--bg-1);
+  flex: 1;
+}
+.template-card.selected .template-card-content {
+  background: var(--accent-dim);
 }
 .template-card-name {
   font-size: .95rem; font-weight: 600; margin-bottom: 6px; color: var(--text-0);
@@ -1160,13 +1189,19 @@ a:hover { color: var(--accent-hover); }
   box-shadow: 0 0 6px rgba(201, 168, 124, 0.5);
 }
 .template-card-check {
-  position: absolute; top: 14px; right: 14px;
-  width: 22px; height: 22px; border-radius: 50%;
-  background: var(--accent); color: var(--accent-text);
-  display: none; align-items: center; justify-content: center;
-  box-shadow: 0 2px 10px rgba(201, 168, 124, 0.3);
+  position: absolute;
+  top: 12px; right: 12px;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--accent); color: var(--bg-0);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transform: scale(0.8);
+  transition: all 0.3s var(--ease);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  z-index: 10;
 }
-.template-card.selected .template-card-check { display: flex; }
+.template-card.selected .template-card-check {
+  opacity: 1; transform: scale(1);
+}
 
 /* ── ATS Section — Glassmorphism ── */
 .ats-section {
