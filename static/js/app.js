@@ -25,7 +25,8 @@
   };
 
   const TEMPLATES = [
-    { id: "Sovereign Executive", name: "Sovereign Executive", desc: "Minimalist, architectural whitespace, navy ink.", ats: "98" }
+    { id: "Sovereign Executive", name: "Sovereign Executive", desc: "Minimalist, architectural whitespace, navy ink.", ats: "98" },
+    { id: "Modern Vanguard", name: "Modern Vanguard", desc: "Forest green accents, side-by-side photo layout, visionary feel.", ats: "95" }
   ];
 
   // ── DOM refs ───────────────────────────────────────────────
@@ -575,6 +576,63 @@ Please extract any relevant resume information from this text.`;
 
   btnSend.addEventListener("click", sendMessage);
 
+  const btnAttach = $("#btn-attach");
+  const chatFileInput = $("#chat-file-input");
+
+  if (btnAttach && chatFileInput) {
+    btnAttach.addEventListener("click", () => {
+      chatFileInput.click();
+    });
+
+    chatFileInput.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      chatFileInput.value = ""; // reset
+
+      // Validate type
+      if (!file.type.startsWith("image/")) {
+        alert("Please upload an image file (JPG, PNG, WEBP).");
+        return;
+      }
+
+      // Show user bubble with image
+      const imgUrlLocal = URL.createObjectURL(file);
+      const msgHtml = `<div>I've uploaded my profile photo:</div><img src="${imgUrlLocal}" style="max-width: 150px; border-radius: 8px; margin-top: 8px;">`;
+      appendMessage("user", msgHtml, true); // true = render as HTML
+
+      // Upload to server
+      const uploadBubble = appendMessage("assistant", "Uploading and processing your photo...");
+      scrollChat();
+      typingEl.classList.add("visible");
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const res = await fetch("/api/upload-image", { method: "POST", body: formData });
+        if (!res.ok) throw new Error("Failed to upload image.");
+        const json = await res.json();
+        
+        uploadBubble.remove();
+        typingEl.classList.remove("visible");
+        
+        // Send to AI
+        const serverPath = json.url;
+        const aiMsg = `I uploaded my profile photo. The file path is ${serverPath}. Please add it to the photo_url field in the personal section of the JSON.`;
+        
+        state.messages.push({ role: "user", content: aiMsg });
+        saveState();
+        streamResponse();
+        
+      } catch (err) {
+        uploadBubble.remove();
+        typingEl.classList.remove("visible");
+        appendMessage("assistant", "Sorry, there was an error uploading your photo.");
+        scrollChat();
+      }
+    });
+  }
+
   function sendInitialGreeting() {
     if (state.greetingSent) return; // Guard: never fire twice
     state.greetingSent = true;
@@ -672,7 +730,7 @@ User's message: ${text}`;
     streamResponse();
   }
 
-  function appendMessage(role, content) {
+  function appendMessage(role, content, isHtml = false) {
     const wrapper = document.createElement("div");
     wrapper.className = `msg msg-${role}`;
 
@@ -694,6 +752,8 @@ User's message: ${text}`;
 
     if (role === "assistant") {
       bubble.innerHTML = renderMarkdown(content);
+    } else if (isHtml) {
+      bubble.innerHTML = content;
     } else {
       bubble.textContent = content;
     }
@@ -930,10 +990,17 @@ User's message: ${text}`;
   // ── Preview Panel ─────────────────────────────────────────
   function generatePreviewHtml(data) {
     if (!data) return "";
-    let html = `<div class="true-preview-paper">`;
+    const tplClass = state.selectedTemplate === "Modern Vanguard" ? "tpl-vanguard" : "tpl-sovereign";
+    let html = `<div class="true-preview-paper ${tplClass}">`;
 
     if (data.personal) {
-      html += `<div class="tp-header">
+      html += `<div class="tp-header">`;
+      
+      if (data.personal.photo_url) {
+        html += `<img class="tp-photo" src="${escapeHtml(data.personal.photo_url)}" alt="Profile Photo">`;
+      }
+      
+      html += `<div class="tp-header-text">
         <div class="tp-name">${escapeHtml(data.personal.name || 'Your Name')}</div>
         <div class="tp-contact">`;
       const contact = [];
@@ -943,7 +1010,7 @@ User's message: ${text}`;
       if (data.personal.linkedin) contact.push(escapeHtml(data.personal.linkedin));
       if (data.personal.github) contact.push(escapeHtml(data.personal.github));
       if (data.personal.portfolio) contact.push(escapeHtml(data.personal.portfolio));
-      html += contact.join(' • ') + `</div></div>`;
+      html += contact.join(' • ') + `</div></div></div>`;
     }
 
     if (data.summary) {

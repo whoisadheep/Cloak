@@ -42,6 +42,7 @@ COMPLETION:
 - Keep the JSON format clean and valid.
 - When the user confirms all sections are done, you MUST output the final JSON block.
 - IMMEDIATELY AFTER the CLOAK_JSON_END tag, write a brief, encouraging analysis of their completed resume. Highlight 1-2 strong points, and suggest 1-2 areas they could improve or tailor further.
+- CRITICAL: If the user uploads a profile photo (the system will provide a file path like /static/uploads/...), you MUST save that exact path into the `photo_url` field under personal.
 - You MUST use exactly these JSON keys and structure:
 
 CLOAK_JSON_START
@@ -53,7 +54,8 @@ CLOAK_JSON_START
     "phone": "...",
     "location": "...",
     "linkedin": "...",
-    "github": "..."
+    "github": "...",
+    "photo_url": "..."
   },
   "summary": "...",
   "education": [

@@ -85,6 +85,24 @@ body {
   background: rgba(255,255,255,0.04);
 }
 
+.btn-icon {
+  background: none; border: none; padding: 6px;
+  color: var(--text-2); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 8px; transition: all var(--ease);
+}
+.btn-icon:hover {
+  color: var(--accent);
+  background: var(--surface-1);
+}
+
+.tpl-vanguard {
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.75rem;
+}
+
 /* Chat bubbles */
 .chat-bubble { transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease); }
 .chat-bubble:hover { transform: translateX(2px); }
@@ -995,6 +1013,35 @@ a:hover { color: var(--accent-hover); }
 .tp-bullets li { margin-bottom: 1.5px; }
 .tp-skills { font-size: 7px; }
 .tp-skill-line { margin-bottom: 1.5px; }
+
+/* Vanguard Style overrides */
+.tpl-vanguard {
+  color: #1A332B; /* Deep Forest Green */
+}
+.tpl-vanguard .tp-header {
+  text-align: left;
+  border-bottom: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.tpl-vanguard .tp-header-text {
+  flex: 1;
+}
+.tpl-vanguard .tp-photo {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid #A5C5B5;
+}
+.tpl-vanguard .tp-name {
+  text-transform: none;
+}
+.tpl-vanguard .tp-section-title {
+  border-bottom: 0.5px solid #A5C5B5;
+}
 
 /* ============================================================
    TEMPLATE PICKER  — Premium 3D Redesign

@@ -27,7 +27,7 @@ from reportlab.lib.units import inch
 from reportlab.lib.colors import HexColor, black, white
 from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, HRFlowable,
-    KeepTogether, Table, TableStyle, KeepInFrame
+    KeepTogether, Table, TableStyle, KeepInFrame, Image
 )
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
 
@@ -558,6 +558,13 @@ def apply_template(template_name: str):
     R["header_alignment"] = TA_CENTER
     R["header_uppercase"] = True
     R["contact_font"] = "Helvetica"
+    
+    if template_name == "Modern Vanguard":
+        P["ink"] = "#1A332B"  # Deep Forest Green
+        P["ink_light"] = "#2D4C40"
+        P["rule"] = "#A5C5B5"
+        R["header_alignment"] = TA_LEFT
+        R["header_uppercase"] = False
 
 def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None):
     """Render the resume PDF using Stitch design tokens."""
@@ -594,23 +601,22 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
 
     story = []
 
+    header_content = []
+    
     name_str = name.upper() if R.get("header_uppercase") else name
-    story.append(Paragraph(name_str, styles["name"]))
+    header_content.append(Paragraph(name_str, styles["name"]))
     
     title_str = _s(personal.get('title'))
     if title_str and R.get("header_uppercase"): title_str = title_str.upper()
     
     if not R.get("single_column"):
-        # For Creative Bold, show title below name without location
-        story.append(Paragraph(title_str, styles["tagline"]))
-        story.append(Spacer(1, 4))
-        story.append(HRFlowable(width="100%", thickness=1.5, color=HexColor(P["ink"]), spaceBefore=2, spaceAfter=8))
+        header_content.append(Paragraph(title_str, styles["tagline"]))
+        header_content.append(Spacer(1, 4))
+        header_content.append(HRFlowable(width="100%", thickness=1.5, color=HexColor(P["ink"]), spaceBefore=2, spaceAfter=8))
         
-        # Build contact grid
         contact_parts = []
-        
         def _fmt_contact(char, text):
-            return f"<font backColor='#1A2639' color='white'>&nbsp;<b>{char}</b>&nbsp;</font> {text}"
+            return f"<font backColor='{P['ink']}' color='white'>&nbsp;<b>{char}</b>&nbsp;</font> {text}"
             
         if personal.get("phone"): contact_parts.append(_fmt_contact("P", _s(personal.get("phone"))))
         if personal.get("email"): contact_parts.append(_fmt_contact("E", _s(personal.get("email"))))
@@ -618,11 +624,11 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
         if personal.get("linkedin"): contact_parts.append(_fmt_contact("W", _s(personal.get("linkedin"))))
         
         contact_line = " &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ".join(contact_parts)
-        story.append(Paragraph(contact_line, styles["contact"]))
-        story.append(Spacer(1, 6))
-        story.append(HRFlowable(width="100%", thickness=2, color=HexColor("#C4D6E0"), spaceBefore=2, spaceAfter=12))
+        header_content.append(Paragraph(contact_line, styles["contact"]))
+        header_content.append(Spacer(1, 6))
+        header_content.append(HRFlowable(width="100%", thickness=2, color=HexColor(P["rule"] or "#C4D6E0"), spaceBefore=2, spaceAfter=12))
     else:
-        story.append(Paragraph(
+        header_content.append(Paragraph(
             f"{title_str}  ·  {_s(personal.get('location'))}",
             styles["tagline"]
         ))
@@ -632,12 +638,45 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
             _s(personal.get("linkedin")),
             _s(personal.get("github")),
         ]))
-        story.append(Paragraph(contact_line, styles["contact"]))
-        story.append(HRFlowable(
+        header_content.append(Paragraph(contact_line, styles["contact"]))
+        header_content.append(HRFlowable(
             width="100%", thickness=1,
             color=HexColor(P["ink"]),
             spaceBefore=6, spaceAfter=0,
         ))
+
+    # Check if there's a profile photo to render
+    photo_url = personal.get("photo_url")
+    if photo_url:
+        try:
+            # Handle local paths vs external URLs
+            if photo_url.startswith("/static/"):
+                img_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), photo_url.lstrip("/"))
+            else:
+                img_path = photo_url
+                
+            img = Image(img_path)
+            # Resize image to fit neatly (e.g. 1.2 x 1.2 inches)
+            img.drawHeight = 1.2 * inch
+            img.drawWidth = 1.2 * inch
+            
+            # Place side-by-side with text using a Table
+            header_table = Table(
+                [[img, header_content]],
+                colWidths=[1.4 * inch, letter[0] - S["margin_left"]*inch - S["margin_right"]*inch - 1.4*inch],
+                style=TableStyle([
+                    ("VALIGN", (0,0), (-1,-1), "MIDDLE" if R.get("header_alignment") == TA_LEFT else "TOP"),
+                    ("LEFTPADDING", (0,0), (-1,-1), 0),
+                    ("RIGHTPADDING", (0,0), (-1,-1), 0),
+                    ("BOTTOMPADDING", (0,0), (-1,-1), 12),
+                ])
+            )
+            story.append(header_table)
+        except Exception as e:
+            print(f"[IMAGE LOAD ERROR] {e}", file=sys.stderr)
+            story.extend(header_content)
+    else:
+        story.extend(header_content)
 
     left_column = []
     right_column = []

@@ -15,6 +15,8 @@ import PyPDF2
 import psycopg2
 import psycopg2.extras
 import requests
+import uuid
+from werkzeug.utils import secure_filename
 
 from flask import (
     Flask, request, Response, jsonify,
@@ -45,6 +47,14 @@ limiter = Limiter(
     default_limits=["200 per day", "50 per hour"],
     storage_uri="memory://"
 )
+
+UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @app.after_request
 def add_security_headers(response):
@@ -255,6 +265,30 @@ def upload_file():
     except Exception as e:
         print(f"[UPLOAD ERROR] {e}", flush=True)
         return jsonify({"error": "Failed to process the uploaded file."}), 500
+
+
+@app.route("/api/upload-image", methods=["POST"])
+@limiter.limit("20 per day")
+def upload_image():
+    """Handle profile photo uploads for resumes."""
+    if 'file' not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
+    
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No file selected"}), 400
+        
+    if file and allowed_file(file.filename):
+        ext = file.filename.rsplit('.', 1)[1].lower()
+        filename = f"photo_{uuid.uuid4().hex[:12]}.{ext}"
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
+        
+        # Return the public URL path
+        image_url = f"/static/uploads/{filename}"
+        return jsonify({"url": image_url})
+    
+    return jsonify({"error": "Invalid file type. Only JPG, PNG, and WEBP are allowed."}), 400
 
 @app.route("/api/extract-url", methods=["POST"])
 @limiter.limit("20 per day")
