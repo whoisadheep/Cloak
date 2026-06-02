@@ -32,9 +32,10 @@
   // ── DOM refs ───────────────────────────────────────────────
   const $ = (sel) => document.querySelector(sel);
   const views = {
-    landing:  $("#view-landing"),
-    chat:     $("#view-chat"),
-    template: $("#view-template"),
+    landing:    $("#view-landing"),
+    onboarding: $("#view-onboarding"),
+    chat:       $("#view-chat"),
+    template:   $("#view-template"),
   };
 
   const chatMessages  = $("#chat-messages");
