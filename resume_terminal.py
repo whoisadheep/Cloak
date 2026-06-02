@@ -651,14 +651,22 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
             else:
                 right_column.extend(block)
 
-    if user_data.get("summary"):
+    # ── Section Renderers ─────────────────────────────────────
+    # Each renderer builds flowables and calls add_to_flow().
+    # They are dispatched dynamically based on JSON key order.
+
+    def render_summary():
+        if not user_data.get("summary"):
+            return
         summary_block = []
         section_header(summary_block, "Objective" if not R.get("single_column") else "Professional Summary", styles)
         summary_block.append(Paragraph(_s(user_data["summary"]), styles["body"]))
         summary_block.append(Spacer(1, 8))
         add_to_flow(summary_block, "left")
 
-    if user_data.get("projects"):
+    def render_projects():
+        if not user_data.get("projects"):
+            return
         for i, proj in enumerate(user_data["projects"]):
             entry_block = []
             if i == 0:
@@ -685,7 +693,9 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
             entry_block.append(Spacer(1, S["item_gap"]))
             add_to_flow(entry_block, "left")
 
-    if user_data.get("experience"):
+    def render_experience():
+        if not user_data.get("experience"):
+            return
         for i, exp in enumerate(user_data["experience"]):
             entry_block = []
             if i == 0:
@@ -719,7 +729,9 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
             entry_block.append(Spacer(1, S["item_gap"]))
             add_to_flow(entry_block, "left")
 
-    if user_data.get("education"):
+    def render_education():
+        if not user_data.get("education"):
+            return
         edu_block = []
         section_header(edu_block, "Education", styles)
         for edu in user_data["education"]:
@@ -772,7 +784,9 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
             edu_block.append(Spacer(1, S["item_gap"] + 2))
         add_to_flow(edu_block, "right")
 
-    if user_data.get("skills"):
+    def render_skills():
+        if not user_data.get("skills"):
+            return
         skills_block = []
         section_header(skills_block, "Key Skills" if not R.get("single_column") else "Skills", styles)
         skills_data = user_data["skills"]
@@ -780,7 +794,6 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
         if isinstance(skills_data, dict):
             skills_items = skills_data.items()
         elif isinstance(skills_data, list):
-            # Convert list format [{"category": "X", "items": [...]}] to pairs
             skills_items = []
             for sk in skills_data:
                 if isinstance(sk, dict):
@@ -801,7 +814,6 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
                 skills_str = " • ".join(safe_list)
                 skills_block.append(Paragraph(f'<b>{_s(category)}:</b>  {skills_str}', styles["skills_val"]))
         else:
-            # For two-column: render each skill as individual bullet
             skill_style = ParagraphStyle(
                 "skill_bullet", fontName=T["font_primary"],
                 fontSize=8.5, leading=11,
@@ -812,7 +824,9 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
                 skills_block.append(Paragraph(f'<b>• {_s(category)}:</b> {" • ".join(safe_list)}', skill_style))
         add_to_flow(skills_block, "right")
 
-    if user_data.get("certifications"):
+    def render_certifications():
+        if not user_data.get("certifications"):
+            return
         cert_block = []
         section_header(cert_block, "Certifications", styles)
         for cert in user_data["certifications"]:
@@ -834,26 +848,17 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
             cert_block.append(Paragraph(_s(cert.get("issuer")), styles["cert_meta"]))
         add_to_flow(cert_block, "right")
 
-    # ── Custom / Extra Sections ──────────────────────────────
-    standard_keys = {"personal", "personal_info", "personalInfo", "Personal Info",
-                     "summary", "experience", "projects", "education",
-                     "skills", "certifications", "template", "name"}
-    for key in user_data:
-        if key in standard_keys:
-            continue
+    def render_custom(key):
         section_data = user_data[key]
         if not section_data:
-            continue
-
+            return
         custom_block = []
-        # Pretty-print the section title
         section_title = key.replace("_", " ").replace("-", " ").title()
         section_header(custom_block, section_title, styles)
 
         if isinstance(section_data, list):
             for item in section_data:
                 if isinstance(item, dict):
-                    # Header row: name/title + year/date
                     item_name = _s(item.get("name") or item.get("title"))
                     item_date = _s(item.get("year") or item.get("date"))
                     if item_name or item_date:
@@ -876,13 +881,11 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
                                 custom_block.append(Paragraph(item_date, styles["date_line"]))
                             custom_block.append(Paragraph(f"<b>{item_name}</b>", styles["body"]))
 
-                    # Subtitle line
                     subtitle = _s(item.get("subtitle") or item.get("issuer")
                                   or item.get("organization") or item.get("description"))
                     if subtitle:
                         custom_block.append(Paragraph(subtitle, styles["job_title"]))
 
-                    # Bullets
                     for bullet in item.get("bullets") or []:
                         custom_block.append(Paragraph(f"• {_s(bullet)}", styles["bullet"]))
 
@@ -892,8 +895,27 @@ def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None)
         elif isinstance(section_data, str):
             custom_block.append(Paragraph(_s(section_data), styles["body"]))
 
-        if len(custom_block) > 1:  # More than just the header
+        if len(custom_block) > 1:
             add_to_flow(custom_block, "left")
+
+    # ── Render sections in JSON key order ────────────────────
+    section_renderers = {
+        "summary": render_summary,
+        "projects": render_projects,
+        "experience": render_experience,
+        "education": render_education,
+        "skills": render_skills,
+        "certifications": render_certifications,
+    }
+    skip_keys = {"personal", "personal_info", "personalInfo", "Personal Info", "template", "name"}
+
+    for key in user_data:
+        if key in skip_keys:
+            continue
+        if key in section_renderers:
+            section_renderers[key]()
+        else:
+            render_custom(key)
 
     if not R.get("single_column"):
         content_width = letter[0] - S["margin_left"] * inch - S["margin_right"] * inch
