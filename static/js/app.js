@@ -121,6 +121,7 @@
 
   $("#btn-onboarding-continue").addEventListener("click", () => {
     showView("chat");
+    scrollChat();
     sendInitialGreeting();
   });
 
@@ -453,7 +454,7 @@
           state.userData = data;
           saveState();
           $("#upload-modal").classList.remove("visible");
-          renderTemplateGrid();
+          renderTemplateGrid("template-grid");
           showView("template");
         } catch {
           alert("Invalid JSON file. Please upload a valid user_data.json.");
@@ -462,10 +463,10 @@
       reader.readAsText(file);
     } else {
       $("#upload-modal").classList.remove("visible");
-      showView("chat");
+      renderTemplateGrid("onboarding-template-grid");
+      showView("onboarding");
       
       const uploadBubble = appendMessage("assistant", "Parsing your existing resume...");
-      scrollChat();
       typingEl.classList.add("visible");
       
       const formData = new FormData();
