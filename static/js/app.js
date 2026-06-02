@@ -1659,8 +1659,8 @@ User's message: ${text}`;
 
     // Re-attach after template grid is rendered
     const origRenderTemplateGrid = renderTemplateGrid;
-    renderTemplateGrid = function() {
-      origRenderTemplateGrid();
+    renderTemplateGrid = function(containerId) {
+      origRenderTemplateGrid(containerId);
       setTimeout(() => attachTilt('.template-card'), 50);
     };
   })();
