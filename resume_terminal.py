@@ -558,6 +558,7 @@ def apply_template(template_name: str):
     R["header_alignment"] = TA_CENTER
     R["header_uppercase"] = True
     R["contact_font"] = "Helvetica"
+    R["single_column"] = True
     
     if template_name == "Modern Vanguard":
         P["ink"] = "#1A332B"  # Deep Forest Green
@@ -565,6 +566,7 @@ def apply_template(template_name: str):
         P["rule"] = "#A5C5B5"
         R["header_alignment"] = TA_LEFT
         R["header_uppercase"] = False
+        R["single_column"] = False
 
 def build_pdf(user_data: dict, output_path: str, ats_report: dict | None = None):
     """Render the resume PDF using Stitch design tokens."""
