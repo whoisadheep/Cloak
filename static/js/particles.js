@@ -212,4 +212,5 @@
   // ── Boot both systems ──────────────────────────────────
   createSystem("particle-canvas", "view-landing");
   createSystem("template-particle-canvas", "view-template");
+  createSystem("onboarding-particle-canvas", "view-onboarding");
 })();
