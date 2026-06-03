@@ -1176,7 +1176,7 @@ User's message: ${text}`;
     }
 
     function renderCustomSections() {
-      const standardKeys = ["personal", "summary", "experience", "projects", "education", "skills", "certifications", "template"];
+      const standardKeys = ["personal", "summary", "experience", "projects", "education", "skills", "certifications", "template", "languages", "hobbies", "interests", "achievements", "personal_details", "personal details", "Personal Details"];
       let s = "";
       for (const key of Object.keys(data)) {
         if (!standardKeys.includes(key) && Array.isArray(data[key]) && data[key].length) {

@@ -179,11 +179,67 @@ function buildVanguardHTML(data) {
       </div>`;
   }
 
+  // Languages (top-level key)
+  if (data.languages && Array.isArray(data.languages) && data.languages.length) {
+    const items = data.languages.map(l => {
+      if (typeof l === "object") return _esc(l.name || l.language || "");
+      return _esc(l);
+    }).filter(Boolean).join(", ");
+    if (items) {
+      right += `
+        <div class="rv-section">
+          <div class="rv-section-title">Languages</div>
+          <div class="rv-entry-body">${items}</div>
+        </div>`;
+    }
+  }
+
+  // Hobbies / Interests (top-level key)
+  const hobbiesData = data.hobbies || data.interests;
+  if (hobbiesData && Array.isArray(hobbiesData) && hobbiesData.length) {
+    const items = hobbiesData.map(h => {
+      if (typeof h === "object") return _esc(h.name || h.hobby || "");
+      return _esc(h);
+    }).filter(Boolean).join(", ");
+    if (items) {
+      right += `
+        <div class="rv-section">
+          <div class="rv-section-title">${data.hobbies ? "Hobbies" : "Interests"}</div>
+          <div class="rv-entry-body">${items}</div>
+        </div>`;
+    }
+  }
+
+  // Personal Details (top-level key)
+  const pd = data.personal_details || data["personal details"] || data["Personal Details"];
+  if (pd && Array.isArray(pd) && pd.length) {
+    let pdHTML = pd.map(item => {
+      if (typeof item === "object") {
+        const label = _esc(item.name || item.title || item.label || "");
+        const val = _esc(item.value || item.subtitle || item.description || "");
+        const bullets = (item.bullets || []).map(b => `<li>${_esc(b)}</li>`).join("");
+        return `<div class="rv-entry">
+          ${label ? `<div class="rv-entry-title">${label}</div>` : ""}
+          ${val ? `<div class="rv-entry-body">${val}</div>` : ""}
+          ${bullets ? `<ul>${bullets}</ul>` : ""}
+        </div>`;
+      }
+      return `<div class="rv-entry-body">&bull; ${_esc(item)}</div>`;
+    }).join("");
+    right += `
+      <div class="rv-section">
+        <div class="rv-section-title">Personal Details</div>
+        ${pdHTML}
+      </div>`;
+  }
+
   // Custom sections (anything not in standard keys) → right column
   const skipKeys = new Set([
     "personal", "personal_info", "personalInfo", "Personal Info",
     "template", "name", "summary", "experience", "projects",
-    "education", "skills", "certifications"
+    "education", "skills", "certifications",
+    "languages", "hobbies", "interests", "achievements",
+    "personal_details", "personal details", "Personal Details"
   ]);
   for (const key of Object.keys(data)) {
     if (skipKeys.has(key)) continue;
