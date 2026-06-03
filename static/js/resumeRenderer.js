@@ -1,209 +1,244 @@
 /**
- * ResumeRenderer
- * Generates an HTML DOM structure for the resume and injects it into the print container.
+ * ResumeRenderer — Modern Vanguard HTML Template
+ * Generates a complete HTML resume using rv- prefixed classes
+ * to avoid any collision with the main app's style.css.
  */
 
 function renderHTMLResume(userData, templateId) {
   const container = document.getElementById("print-container");
   if (!container) return;
-  
+
   if (templateId === "Modern Vanguard") {
-    container.innerHTML = generateVanguard(userData);
+    container.innerHTML = buildVanguardHTML(userData);
   } else {
-    // Fallback or other templates can be added here
     container.innerHTML = "";
   }
 }
 
-function escapeHTML(str) {
+function _esc(str) {
   if (!str) return "";
-  const div = document.createElement("div");
-  div.innerText = str;
-  return div.innerHTML;
+  const d = document.createElement("div");
+  d.textContent = str;
+  return d.innerHTML;
 }
 
-function generateVanguard(data) {
-  const personal = data.personal || data.personal_info || data.personalInfo || {};
-  
-  // Header HTML
-  let contactHtml = "";
-  if (personal.email) contactHtml += `<span>${escapeHTML(personal.email)}</span>`;
-  if (personal.phone) contactHtml += `<span>${escapeHTML(personal.phone)}</span>`;
-  if (personal.location) contactHtml += `<span>${escapeHTML(personal.location)}</span>`;
-  if (personal.linkedin) contactHtml += `<span>${escapeHTML(personal.linkedin)}</span>`;
-  if (personal.github) contactHtml += `<span>${escapeHTML(personal.github)}</span>`;
-  
-  let headerPhotoHtml = "";
-  if (personal.photo_url) {
-    headerPhotoHtml = `<img src="${escapeHTML(personal.photo_url)}" class="header-photo" alt="Profile Photo">`;
+function buildVanguardHTML(data) {
+  const p = data.personal || data.personal_info || data.personalInfo || {};
+
+  // ── Contact line ──
+  const contactParts = [];
+  if (p.email) contactParts.push(`<span>${_esc(p.email)}</span>`);
+  if (p.phone) contactParts.push(`<span>${_esc(p.phone)}</span>`);
+  if (p.location) contactParts.push(`<span>${_esc(p.location)}</span>`);
+  if (p.linkedin) contactParts.push(`<span>${_esc(p.linkedin)}</span>`);
+  if (p.github) contactParts.push(`<span>${_esc(p.github)}</span>`);
+
+  // ── Photo ──
+  let photoHTML = "";
+  if (p.photo_url) {
+    photoHTML = `<img src="${_esc(p.photo_url)}" class="rv-photo" alt="">`;
   }
 
-  // Generate Left Column (Experience, Projects)
-  let leftColumnHtml = "";
+  // ── LEFT COLUMN ──
+  let left = "";
+
+  // Summary / Objective
   if (data.summary) {
-    leftColumnHtml += `
-      <div class="section">
-        <div class="section-title">Objective</div>
-        <div class="entry-body">${escapeHTML(data.summary)}</div>
-      </div>
-    `;
+    left += `
+      <div class="rv-section">
+        <div class="rv-section-title">Objective</div>
+        <div class="rv-entry-body">${_esc(data.summary)}</div>
+      </div>`;
   }
 
-  if (data.experience && data.experience.length > 0) {
-    let expEntries = data.experience.map(exp => {
-      let bullets = "";
-      if (exp.bullets && exp.bullets.length > 0) {
-        bullets = `<ul>${exp.bullets.map(b => `<li>${escapeHTML(b)}</li>`).join("")}</ul>`;
-      }
+  // Experience
+  if (data.experience && data.experience.length) {
+    let entries = data.experience.map(exp => {
+      const bullets = (exp.bullets || [])
+        .map(b => `<li>${_esc(b)}</li>`).join("");
+      const loc = exp.location ? ` &bull; ${_esc(exp.location)}` : "";
       return `
-        <div class="entry">
-          <div class="entry-header">
-            <div class="entry-title">${escapeHTML(exp.company)}</div>
-            <div class="entry-date">${escapeHTML(exp.start)} - ${escapeHTML(exp.end || "Present")}</div>
+        <div class="rv-entry">
+          <div class="rv-entry-row">
+            <div class="rv-entry-title">${_esc(exp.company)}</div>
+            <div class="rv-entry-date">${_esc(exp.start)} – ${_esc(exp.end || "Present")}</div>
           </div>
-          <div class="entry-subtitle">${escapeHTML(exp.title || exp.role)}${exp.location ? ` &bull; ${escapeHTML(exp.location)}` : ''}</div>
-          <div class="entry-body">${bullets}</div>
-        </div>
-      `;
+          <div class="rv-entry-subtitle">${_esc(exp.title || exp.role)}${loc}</div>
+          ${bullets ? `<ul>${bullets}</ul>` : ""}
+        </div>`;
     }).join("");
-    leftColumnHtml += `
-      <div class="section">
-        <div class="section-title">Experience</div>
-        ${expEntries}
-      </div>
-    `;
+
+    left += `
+      <div class="rv-section">
+        <div class="rv-section-title">Experience</div>
+        ${entries}
+      </div>`;
   }
 
-  if (data.projects && data.projects.length > 0) {
-    let projEntries = data.projects.map(proj => {
-      let bullets = "";
-      if (proj.bullets && proj.bullets.length > 0) {
-        bullets = `<ul>${proj.bullets.map(b => `<li>${escapeHTML(b)}</li>`).join("")}</ul>`;
-      }
+  // Projects
+  if (data.projects && data.projects.length) {
+    let entries = data.projects.map(proj => {
+      const bullets = (proj.bullets || [])
+        .map(b => `<li>${_esc(b)}</li>`).join("");
       return `
-        <div class="entry">
-          <div class="entry-header">
-            <div class="entry-title">${escapeHTML(proj.name)}</div>
-            <div class="entry-date">${escapeHTML(proj.link)}</div>
+        <div class="rv-entry">
+          <div class="rv-entry-row">
+            <div class="rv-entry-title">${_esc(proj.name)}</div>
+            <div class="rv-entry-date">${_esc(proj.link)}</div>
           </div>
-          ${proj.tech ? `<div class="entry-subtitle">Tech: ${escapeHTML(proj.tech)}</div>` : ''}
-          <div class="entry-body">${bullets}</div>
-        </div>
-      `;
+          ${proj.tech ? `<div class="rv-entry-subtitle">Tech: ${_esc(proj.tech)}</div>` : ""}
+          ${bullets ? `<ul>${bullets}</ul>` : ""}
+        </div>`;
     }).join("");
-    leftColumnHtml += `
-      <div class="section">
-        <div class="section-title">Projects</div>
-        ${projEntries}
-      </div>
-    `;
+
+    left += `
+      <div class="rv-section">
+        <div class="rv-section-title">Projects</div>
+        ${entries}
+      </div>`;
   }
 
-  // Generate Right Column (Education, Skills, Certs)
-  let rightColumnHtml = "";
-  
-  if (data.education && data.education.length > 0) {
-    let eduEntries = data.education.map(edu => {
-      let degree = [];
-      if (edu.degree) degree.push(escapeHTML(edu.degree));
-      if (edu.field) degree.push(escapeHTML(edu.field));
-      
-      return `
-        <div class="entry">
-          <div class="entry-date" style="text-align: right; margin-bottom: 2px;">${escapeHTML(edu.year)}</div>
-          <div style="border-bottom: 0.5px solid #A5C5B5; margin-bottom: 4px;"></div>
-          <div class="entry-title">${escapeHTML(edu.institution)}</div>
-          <div class="entry-subtitle" style="margin-top: 2px;">${degree.join(", ")}</div>
-          ${edu.location ? `<div class="entry-body">${escapeHTML(edu.location)}</div>` : ''}
-        </div>
-      `;
-    }).join("");
-    rightColumnHtml += `
-      <div class="section">
-        <div class="section-title">Education</div>
-        ${eduEntries}
-      </div>
-    `;
-  }
+  // Custom left-column sections (anything not in skip keys)
+  const skipKeys = new Set([
+    "personal", "personal_info", "personalInfo", "Personal Info",
+    "template", "name", "summary", "experience", "projects",
+    "education", "skills", "certifications"
+  ]);
+  for (const key of Object.keys(data)) {
+    if (skipKeys.has(key)) continue;
+    const sectionData = data[key];
+    if (!sectionData) continue;
 
-  if (data.skills) {
-    let skillsHtml = "";
-    let skillsData = data.skills;
-    
-    // Handle skills as dict or array
-    if (!Array.isArray(skillsData)) {
-      for (const [category, items] of Object.entries(skillsData)) {
-        skillsHtml += `
-          <div class="skills-category">
-            <div class="skills-category-title">&bull; ${escapeHTML(category)}:</div>
-            <div class="skills-list">${Array.isArray(items) ? items.map(escapeHTML).join(" &bull; ") : escapeHTML(items)}</div>
-          </div>
-        `;
-      }
-    } else {
-      skillsData.forEach(sk => {
-        if (typeof sk === "object") {
-          let cat = sk.category || sk.name || "Skills";
-          let items = sk.items || sk.skills || [];
-          let itemsStr = Array.isArray(items) ? items.map(escapeHTML).join(" &bull; ") : escapeHTML(items);
-          skillsHtml += `
-            <div class="skills-category">
-              <div class="skills-category-title">&bull; ${escapeHTML(cat)}:</div>
-              <div class="skills-list">${itemsStr}</div>
-            </div>
-          `;
-        } else if (typeof sk === "string") {
-          skillsHtml += `<div class="skills-list">&bull; ${escapeHTML(sk)}</div>`;
+    let content = "";
+    const title = key.replace(/[_-]/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+
+    if (Array.isArray(sectionData)) {
+      sectionData.forEach(item => {
+        if (typeof item === "object" && item !== null) {
+          const itemName = _esc(item.name || item.title || "");
+          const itemDate = _esc(item.year || item.date || "");
+          const subtitle = _esc(item.subtitle || item.issuer || item.organization || item.description || "");
+          const bullets = (item.bullets || []).map(b => `<li>${_esc(b)}</li>`).join("");
+          content += `
+            <div class="rv-entry">
+              ${itemName || itemDate ? `
+                <div class="rv-entry-row">
+                  <div class="rv-entry-title">${itemName}</div>
+                  <div class="rv-entry-date">${itemDate}</div>
+                </div>` : ""}
+              ${subtitle ? `<div class="rv-entry-subtitle">${subtitle}</div>` : ""}
+              ${bullets ? `<ul>${bullets}</ul>` : ""}
+            </div>`;
+        } else if (typeof item === "string") {
+          content += `<div class="rv-entry-body">&bull; ${_esc(item)}</div>`;
         }
       });
+    } else if (typeof sectionData === "string") {
+      content = `<div class="rv-entry-body">${_esc(sectionData)}</div>`;
     }
-    
-    rightColumnHtml += `
-      <div class="section">
-        <div class="section-title">Key Skills</div>
-        ${skillsHtml}
-      </div>
-    `;
-  }
-  
-  if (data.certifications && data.certifications.length > 0) {
-    let certEntries = data.certifications.map(cert => {
-      return `
-        <div class="entry">
-          <div class="entry-date">${escapeHTML(cert.year)}</div>
-          <div class="entry-title">${escapeHTML(cert.name)}</div>
-          <div class="entry-body">${escapeHTML(cert.issuer)}</div>
-        </div>
-      `;
-    }).join("");
-    rightColumnHtml += `
-      <div class="section">
-        <div class="section-title">Certifications</div>
-        ${certEntries}
-      </div>
-    `;
+
+    if (content) {
+      left += `
+        <div class="rv-section">
+          <div class="rv-section-title">${_esc(title)}</div>
+          ${content}
+        </div>`;
+    }
   }
 
-  // Combine Everything
+  // ── RIGHT COLUMN ──
+  let right = "";
+
+  // Education
+  if (data.education && data.education.length) {
+    let eduEntries = data.education.map(edu => {
+      const degree = [edu.degree, edu.field].filter(Boolean).map(_esc).join(", ");
+      return `
+        <div class="rv-edu-entry">
+          <div class="rv-edu-year">${_esc(edu.year)}</div>
+          <hr class="rv-edu-divider">
+          <div class="rv-edu-inst">${_esc(edu.institution)}</div>
+          ${degree ? `<div class="rv-edu-degree">${degree}</div>` : ""}
+          ${edu.location ? `<div class="rv-entry-body" style="margin-top:2pt">${_esc(edu.location)}</div>` : ""}
+        </div>`;
+    }).join("");
+
+    right += `
+      <div class="rv-section">
+        <div class="rv-section-title">Education</div>
+        ${eduEntries}
+      </div>`;
+  }
+
+  // Skills
+  if (data.skills) {
+    let skillsHTML = "";
+    if (Array.isArray(data.skills)) {
+      data.skills.forEach(sk => {
+        if (typeof sk === "object") {
+          const cat = sk.category || sk.name || "Skills";
+          const items = sk.items || sk.skills || [];
+          const joined = Array.isArray(items) ? items.map(_esc).join(" &bull; ") : _esc(items);
+          skillsHTML += `
+            <div class="rv-skill-group">
+              <div class="rv-skill-cat">&bull; ${_esc(cat)}:</div>
+              <div class="rv-skill-items">${joined}</div>
+            </div>`;
+        } else if (typeof sk === "string") {
+          skillsHTML += `<div class="rv-skill-items">&bull; ${_esc(sk)}</div>`;
+        }
+      });
+    } else {
+      for (const [cat, items] of Object.entries(data.skills)) {
+        const joined = Array.isArray(items) ? items.map(_esc).join(" &bull; ") : _esc(items);
+        skillsHTML += `
+          <div class="rv-skill-group">
+            <div class="rv-skill-cat">&bull; ${_esc(cat)}:</div>
+            <div class="rv-skill-items">${joined}</div>
+          </div>`;
+      }
+    }
+
+    right += `
+      <div class="rv-section">
+        <div class="rv-section-title">Key Skills</div>
+        ${skillsHTML}
+      </div>`;
+  }
+
+  // Certifications
+  if (data.certifications && data.certifications.length) {
+    let certEntries = data.certifications.map(c => `
+      <div class="rv-cert-entry">
+        <div class="rv-entry-row">
+          <div class="rv-cert-name">${_esc(c.name)}</div>
+          <div class="rv-entry-date">${_esc(c.year)}</div>
+        </div>
+        ${c.issuer ? `<div class="rv-cert-meta">${_esc(c.issuer)}</div>` : ""}
+      </div>`
+    ).join("");
+
+    right += `
+      <div class="rv-section">
+        <div class="rv-section-title">Certifications</div>
+        ${certEntries}
+      </div>`;
+  }
+
+  // ── Assemble page ──
   return `
-    <div class="resume-vanguard">
-      <div class="header">
-        ${headerPhotoHtml}
-        <div class="header-content">
-          <h1>${escapeHTML(personal.name || "Candidate Name")}</h1>
-          <div class="tagline">${escapeHTML(personal.title || "")}</div>
-          <div class="contact-info">${contactHtml}</div>
+    <div class="rv-page">
+      <div class="rv-header">
+        ${photoHTML}
+        <div class="rv-header-text">
+          <div class="rv-name">${_esc(p.name || "Candidate Name")}</div>
+          <div class="rv-tagline">${_esc(p.title || "")}</div>
+          <div class="rv-contact">${contactParts.join("")}</div>
         </div>
       </div>
-      
-      <div class="resume-grid">
-        <div class="column-left">
-          ${leftColumnHtml}
-        </div>
-        <div class="column-right">
-          ${rightColumnHtml}
-        </div>
+      <div class="rv-grid">
+        <div class="rv-col-left">${left}</div>
+        <div class="rv-col-right">${right}</div>
       </div>
-    </div>
-  `;
+    </div>`;
 }
