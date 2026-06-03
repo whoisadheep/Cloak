@@ -1002,16 +1002,16 @@ User's message: ${text}`;
   // ── Preview Panel ─────────────────────────────────────────
   function generatePreviewHtml(data) {
     if (!data) return "";
-    const tplClass = state.selectedTemplate === "Modern Vanguard" ? "tpl-vanguard" : "tpl-sovereign";
+    const isVanguard = state.selectedTemplate === "Modern Vanguard";
+    const tplClass = isVanguard ? "tpl-vanguard" : "tpl-sovereign";
     let html = `<div class="true-preview-paper ${tplClass}">`;
 
+    // ── Header ──
     if (data.personal) {
       html += `<div class="tp-header">`;
-      
       if (data.personal.photo_url) {
         html += `<img class="tp-photo" src="${escapeHtml(data.personal.photo_url)}" alt="Profile Photo">`;
       }
-      
       html += `<div class="tp-header-text">
         <div class="tp-name">${escapeHtml(data.personal.name || 'Your Name')}</div>
         <div class="tp-contact">`;
@@ -1022,21 +1022,23 @@ User's message: ${text}`;
       if (data.personal.linkedin) contact.push(escapeHtml(data.personal.linkedin));
       if (data.personal.github) contact.push(escapeHtml(data.personal.github));
       if (data.personal.portfolio) contact.push(escapeHtml(data.personal.portfolio));
-      html += contact.join(' • ') + `</div></div></div>`;
+      html += contact.join(' &bull; ') + `</div></div></div>`;
     }
 
-    if (data.summary) {
-      html += `<div class="tp-section">
-        <div class="tp-section-title">Professional Summary</div>
+    // ── Build sections ──
+    function renderSummary() {
+      if (!data.summary) return "";
+      return `<div class="tp-section">
+        <div class="tp-section-title">${isVanguard ? "Objective" : "Professional Summary"}</div>
         <div class="tp-summary">${escapeHtml(data.summary)}</div>
       </div>`;
     }
 
-    if (data.experience && data.experience.length) {
-      html += `<div class="tp-section">
-        <div class="tp-section-title">Experience</div>`;
+    function renderExperience() {
+      if (!data.experience || !data.experience.length) return "";
+      let s = `<div class="tp-section"><div class="tp-section-title">Experience</div>`;
       data.experience.forEach(e => {
-        html += `<div class="tp-item">
+        s += `<div class="tp-item">
           <div class="tp-item-header">
             <span class="tp-item-title">${escapeHtml(e.company || '')}</span>
             <span class="tp-item-date">${escapeHtml(e.start || '')} - ${escapeHtml(e.end || '')}</span>
@@ -1044,20 +1046,18 @@ User's message: ${text}`;
           <div class="tp-item-sub">${escapeHtml(e.title || '')}${e.location ? ' | ' + escapeHtml(e.location) : ''}</div>
           <ul class="tp-bullets">`;
         if (e.bullets && Array.isArray(e.bullets)) {
-          e.bullets.forEach(b => {
-            html += `<li>${escapeHtml(b)}</li>`;
-          });
+          e.bullets.forEach(b => { s += `<li>${escapeHtml(b)}</li>`; });
         }
-        html += `</ul></div>`;
+        s += `</ul></div>`;
       });
-      html += `</div>`;
+      return s + `</div>`;
     }
 
-    if (data.projects && data.projects.length) {
-      html += `<div class="tp-section">
-        <div class="tp-section-title">Projects</div>`;
+    function renderProjects() {
+      if (!data.projects || !data.projects.length) return "";
+      let s = `<div class="tp-section"><div class="tp-section-title">Projects</div>`;
       data.projects.forEach(p => {
-        html += `<div class="tp-item">
+        s += `<div class="tp-item">
           <div class="tp-item-header">
             <span class="tp-item-title">${escapeHtml(p.name || '')}</span>
             <span class="tp-item-date">${escapeHtml(p.date || '')}</span>
@@ -1065,57 +1065,66 @@ User's message: ${text}`;
           <div class="tp-item-sub">${escapeHtml(p.tech || '')}</div>
           <ul class="tp-bullets">`;
         if (p.bullets && Array.isArray(p.bullets)) {
-          p.bullets.forEach(b => {
-            html += `<li>${escapeHtml(b)}</li>`;
-          });
+          p.bullets.forEach(b => { s += `<li>${escapeHtml(b)}</li>`; });
         }
-        html += `</ul></div>`;
+        s += `</ul></div>`;
       });
-      html += `</div>`;
+      return s + `</div>`;
     }
 
-    if (data.education && data.education.length) {
-      html += `<div class="tp-section">
-        <div class="tp-section-title">Education</div>`;
+    function renderEducation() {
+      if (!data.education || !data.education.length) return "";
+      let s = `<div class="tp-section"><div class="tp-section-title">Education</div>`;
       data.education.forEach(e => {
-        html += `<div class="tp-item">
+        let degreeField = [];
+        if (e.degree) degreeField.push(e.degree);
+        if (e.field) degreeField.push(e.field);
+        let degreeStr = escapeHtml(degreeField.join(", "));
+        if (e.percentage) {
+          degreeStr += degreeStr ? ` &bull; ${escapeHtml(e.percentage)}` : escapeHtml(e.percentage);
+        }
+        if (e.gpa) {
+          degreeStr += ` | GPA: ${escapeHtml(e.gpa)}`;
+        }
+        s += `<div class="tp-item">
           <div class="tp-item-header">
             <span class="tp-item-title">${escapeHtml(e.institution || '')}</span>
             <span class="tp-item-date">${escapeHtml(e.year || '')}</span>
-          </div>`;
-          let degreeField = [];
-          if (e.degree) degreeField.push(e.degree);
-          if (e.field) degreeField.push(e.field);
-          let degreeStr = escapeHtml(degreeField.join(", "));
-          if (e.percentage) {
-            if (degreeStr) degreeStr += ` &nbsp;&bull;&nbsp; ${escapeHtml(e.percentage)}`;
-            else degreeStr = escapeHtml(e.percentage);
-          }
-          if (e.gpa) {
-            degreeStr += ` | GPA: ${escapeHtml(e.gpa)}`;
-          }
-          html += `<div class="tp-item-sub">${degreeStr}</div>
+          </div>
+          <div class="tp-item-sub">${degreeStr}</div>
         </div>`;
       });
-      html += `</div>`;
+      return s + `</div>`;
     }
 
-    if (data.skills && Object.keys(data.skills).length) {
-      html += `<div class="tp-section">
-        <div class="tp-section-title">Skills</div>
+    function renderSkills() {
+      if (!data.skills || !Object.keys(data.skills).length) return "";
+      let s = `<div class="tp-section">
+        <div class="tp-section-title">${isVanguard ? "Key Skills" : "Skills"}</div>
         <div class="tp-skills">`;
-      for (const [cat, list] of Object.entries(data.skills)) {
-        const items = Array.isArray(list) ? list.join(", ") : list;
-        html += `<div class="tp-skill-line"><strong>${escapeHtml(cat)}:</strong> ${escapeHtml(items)}</div>`;
+      if (typeof data.skills === "object" && !Array.isArray(data.skills)) {
+        for (const [cat, list] of Object.entries(data.skills)) {
+          const items = Array.isArray(list) ? list.join(", ") : list;
+          s += `<div class="tp-skill-line"><strong>${escapeHtml(cat)}:</strong> ${escapeHtml(items)}</div>`;
+        }
+      } else if (Array.isArray(data.skills)) {
+        data.skills.forEach(sk => {
+          if (typeof sk === "object") {
+            const cat = sk.category || sk.name || "Skills";
+            const items = sk.items || sk.skills || [];
+            const joined = Array.isArray(items) ? items.join(", ") : items;
+            s += `<div class="tp-skill-line"><strong>${escapeHtml(cat)}:</strong> ${escapeHtml(joined)}</div>`;
+          }
+        });
       }
-      html += `</div></div>`;
+      return s + `</div></div>`;
     }
 
-    if (data.certifications && data.certifications.length) {
-      html += `<div class="tp-section">
-        <div class="tp-section-title">Certifications</div>`;
+    function renderCertifications() {
+      if (!data.certifications || !data.certifications.length) return "";
+      let s = `<div class="tp-section"><div class="tp-section-title">Certifications</div>`;
       data.certifications.forEach(c => {
-        html += `<div class="tp-item">
+        s += `<div class="tp-item">
           <div class="tp-item-header">
             <span class="tp-item-title">${escapeHtml(c.name || '')}</span>
             <span class="tp-item-date">${escapeHtml(c.year || '')}</span>
@@ -1123,37 +1132,53 @@ User's message: ${text}`;
           <div class="tp-item-sub">${escapeHtml(c.issuer || '')}</div>
         </div>`;
       });
-      html += `</div>`;
+      return s + `</div>`;
     }
 
-    // Render any custom sections
-    const standardKeys = ["personal", "summary", "experience", "projects", "education", "skills", "certifications", "template"];
-    for (const key of Object.keys(data)) {
-      if (!standardKeys.includes(key) && Array.isArray(data[key]) && data[key].length) {
-        html += `<div class="tp-section">
-          <div class="tp-section-title">${escapeHtml(capitalize(key))}</div>`;
-        data[key].forEach(item => {
-          html += `<div class="tp-item">
-            <div class="tp-item-header">
-              <span class="tp-item-title">${escapeHtml(item.name || item.title || '')}</span>
-              <span class="tp-item-date">${escapeHtml(item.year || item.date || '')}</span>
-            </div>
-            <div class="tp-item-sub">${escapeHtml(item.subtitle || item.issuer || item.organization || '')}</div>
-            <ul class="tp-bullets">`;
-          if (item.bullets && Array.isArray(item.bullets)) {
-            item.bullets.forEach(b => {
-              html += `<li>${escapeHtml(b)}</li>`;
-            });
-          }
-          html += `</ul></div>`;
-        });
-        html += `</div>`;
+    function renderCustomSections() {
+      const standardKeys = ["personal", "summary", "experience", "projects", "education", "skills", "certifications", "template"];
+      let s = "";
+      for (const key of Object.keys(data)) {
+        if (!standardKeys.includes(key) && Array.isArray(data[key]) && data[key].length) {
+          s += `<div class="tp-section">
+            <div class="tp-section-title">${escapeHtml(capitalize(key))}</div>`;
+          data[key].forEach(item => {
+            s += `<div class="tp-item">
+              <div class="tp-item-header">
+                <span class="tp-item-title">${escapeHtml(item.name || item.title || '')}</span>
+                <span class="tp-item-date">${escapeHtml(item.year || item.date || '')}</span>
+              </div>
+              <div class="tp-item-sub">${escapeHtml(item.subtitle || item.issuer || item.organization || '')}</div>
+              <ul class="tp-bullets">`;
+            if (item.bullets && Array.isArray(item.bullets)) {
+              item.bullets.forEach(b => { s += `<li>${escapeHtml(b)}</li>`; });
+            }
+            s += `</ul></div>`;
+          });
+          s += `</div>`;
+        }
       }
+      return s;
+    }
+
+    // ── Layout: 2-column for Vanguard, single-column for Sovereign ──
+    if (isVanguard) {
+      const leftCol = renderSummary() + renderExperience() + renderProjects() + renderCustomSections();
+      const rightCol = renderEducation() + renderSkills() + renderCertifications();
+      html += `<div class="tp-grid">
+        <div class="tp-col-left">${leftCol}</div>
+        <div class="tp-col-right">${rightCol}</div>
+      </div>`;
+    } else {
+      html += renderSummary() + renderExperience() + renderProjects() + renderEducation() + renderSkills() + renderCertifications() + renderCustomSections();
     }
 
     html += `</div>`;
     return html;
   }
+
+
+
 
   function renderPreview(data) {
     if (!data) return;

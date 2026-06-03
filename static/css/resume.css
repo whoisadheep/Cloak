@@ -53,13 +53,22 @@
 
 .rv-page {
   font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-  color: #1A332B;
+  color: #1A332B !important;
   background: #FFFFFF;
   padding: 0.55in 0.7in 0.5in 0.7in;
   box-sizing: border-box;
   line-height: 1.45;
   width: 8.5in;
   min-height: 11in;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+  color-adjust: exact !important;
+}
+
+.rv-page * {
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+  color-adjust: exact !important;
 }
 
 /* ── Header ── */

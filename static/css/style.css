@@ -1020,10 +1020,12 @@ a:hover { color: var(--accent-hover); }
 }
 .tpl-vanguard .tp-header {
   text-align: left;
-  border-bottom: none;
+  border-bottom: 1.5px solid #1A332B;
   display: flex;
   align-items: center;
   gap: 12px;
+  padding-bottom: 8px;
+  margin-bottom: 10px;
 }
 .tpl-vanguard .tp-header-text {
   flex: 1;
@@ -1031,16 +1033,41 @@ a:hover { color: var(--accent-hover); }
 .tpl-vanguard .tp-photo {
   width: 40px;
   height: 40px;
-  border-radius: 50%;
+  border-radius: 4px;
   object-fit: cover;
   flex-shrink: 0;
   border: 1px solid #A5C5B5;
 }
 .tpl-vanguard .tp-name {
   text-transform: none;
+  color: #1A332B;
+}
+.tpl-vanguard .tp-contact {
+  color: #4A6A5A;
 }
 .tpl-vanguard .tp-section-title {
   border-bottom: 0.5px solid #A5C5B5;
+  color: #1A332B;
+}
+.tpl-vanguard .tp-item-title {
+  color: #1A332B;
+}
+.tpl-vanguard .tp-item-sub {
+  color: #3A5A4A;
+}
+.tpl-vanguard .tp-item-date {
+  color: #4A6A5A;
+}
+.tpl-vanguard .tp-summary,
+.tpl-vanguard .tp-bullets li,
+.tpl-vanguard .tp-skill-line {
+  color: #2D4C40;
+}
+/* 2-column grid for Vanguard live preview */
+.tpl-vanguard .tp-grid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 14px;
 }
 
 /* ============================================================
