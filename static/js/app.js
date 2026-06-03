@@ -262,6 +262,46 @@
     }
   });
 
+  // ── Profile Photo Upload ─────────────────────────────────
+  $("#btn-add-photo").addEventListener("click", () => {
+    $("#file-photo").click();
+  });
+
+  $("#file-photo").addEventListener("change", () => {
+    const file = $("#file-photo").files[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      alert("Please select an image file.");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      alert("Image is too large. Please use an image under 2MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (!state.userData) state.userData = {};
+      if (!state.userData.personal) state.userData.personal = {};
+      state.userData.personal.photo_url = e.target.result;
+      saveState();
+      renderPreview(state.userData);
+
+      const btn = $("#btn-add-photo");
+      btn.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M13.5 4.5L6 12 2.5 8.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Photo Added
+      `;
+      setTimeout(() => {
+        btn.innerHTML = `
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          Change Photo
+        `;
+      }, 2000);
+    };
+    reader.readAsDataURL(file);
+  });
+
   $("#btn-modal-close").addEventListener("click", () => {
     $("#upload-modal").classList.remove("visible");
   });
@@ -1163,8 +1203,8 @@ User's message: ${text}`;
 
     // ── Layout: 2-column for Vanguard, single-column for Sovereign ──
     if (isVanguard) {
-      const leftCol = renderSummary() + renderExperience() + renderProjects() + renderCustomSections();
-      const rightCol = renderEducation() + renderSkills() + renderCertifications();
+      const leftCol = renderSummary() + renderExperience() + renderProjects();
+      const rightCol = renderEducation() + renderSkills() + renderCertifications() + renderCustomSections();
       html += `<div class="tp-grid">
         <div class="tp-col-left">${leftCol}</div>
         <div class="tp-col-right">${rightCol}</div>

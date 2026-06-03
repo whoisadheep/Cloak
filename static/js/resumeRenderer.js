@@ -98,53 +98,7 @@ function buildVanguardHTML(data) {
       </div>`;
   }
 
-  // Custom left-column sections (anything not in skip keys)
-  const skipKeys = new Set([
-    "personal", "personal_info", "personalInfo", "Personal Info",
-    "template", "name", "summary", "experience", "projects",
-    "education", "skills", "certifications"
-  ]);
-  for (const key of Object.keys(data)) {
-    if (skipKeys.has(key)) continue;
-    const sectionData = data[key];
-    if (!sectionData) continue;
 
-    let content = "";
-    const title = key.replace(/[_-]/g, " ").replace(/\b\w/g, c => c.toUpperCase());
-
-    if (Array.isArray(sectionData)) {
-      sectionData.forEach(item => {
-        if (typeof item === "object" && item !== null) {
-          const itemName = _esc(item.name || item.title || "");
-          const itemDate = _esc(item.year || item.date || "");
-          const subtitle = _esc(item.subtitle || item.issuer || item.organization || item.description || "");
-          const bullets = (item.bullets || []).map(b => `<li>${_esc(b)}</li>`).join("");
-          content += `
-            <div class="rv-entry">
-              ${itemName || itemDate ? `
-                <div class="rv-entry-row">
-                  <div class="rv-entry-title">${itemName}</div>
-                  <div class="rv-entry-date">${itemDate}</div>
-                </div>` : ""}
-              ${subtitle ? `<div class="rv-entry-subtitle">${subtitle}</div>` : ""}
-              ${bullets ? `<ul>${bullets}</ul>` : ""}
-            </div>`;
-        } else if (typeof item === "string") {
-          content += `<div class="rv-entry-body">&bull; ${_esc(item)}</div>`;
-        }
-      });
-    } else if (typeof sectionData === "string") {
-      content = `<div class="rv-entry-body">${_esc(sectionData)}</div>`;
-    }
-
-    if (content) {
-      left += `
-        <div class="rv-section">
-          <div class="rv-section-title">${_esc(title)}</div>
-          ${content}
-        </div>`;
-    }
-  }
 
   // ── RIGHT COLUMN ──
   let right = "";
@@ -223,6 +177,54 @@ function buildVanguardHTML(data) {
         <div class="rv-section-title">Certifications</div>
         ${certEntries}
       </div>`;
+  }
+
+  // Custom sections (anything not in standard keys) → right column
+  const skipKeys = new Set([
+    "personal", "personal_info", "personalInfo", "Personal Info",
+    "template", "name", "summary", "experience", "projects",
+    "education", "skills", "certifications"
+  ]);
+  for (const key of Object.keys(data)) {
+    if (skipKeys.has(key)) continue;
+    const sectionData = data[key];
+    if (!sectionData) continue;
+
+    let content = "";
+    const title = key.replace(/[_-]/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+
+    if (Array.isArray(sectionData)) {
+      sectionData.forEach(item => {
+        if (typeof item === "object" && item !== null) {
+          const itemName = _esc(item.name || item.title || "");
+          const itemDate = _esc(item.year || item.date || "");
+          const subtitle = _esc(item.subtitle || item.issuer || item.organization || item.description || "");
+          const bullets = (item.bullets || []).map(b => `<li>${_esc(b)}</li>`).join("");
+          content += `
+            <div class="rv-entry">
+              ${itemName || itemDate ? `
+                <div class="rv-entry-row">
+                  <div class="rv-entry-title">${itemName}</div>
+                  <div class="rv-entry-date">${itemDate}</div>
+                </div>` : ""}
+              ${subtitle ? `<div class="rv-entry-subtitle">${subtitle}</div>` : ""}
+              ${bullets ? `<ul>${bullets}</ul>` : ""}
+            </div>`;
+        } else if (typeof item === "string") {
+          content += `<div class="rv-entry-body">&bull; ${_esc(item)}</div>`;
+        }
+      });
+    } else if (typeof sectionData === "string") {
+      content = `<div class="rv-entry-body">${_esc(sectionData)}</div>`;
+    }
+
+    if (content) {
+      right += `
+        <div class="rv-section">
+          <div class="rv-section-title">${_esc(title)}</div>
+          ${content}
+        </div>`;
+    }
   }
 
   // ── Assemble page ──
