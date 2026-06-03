@@ -1397,6 +1397,26 @@ User's message: ${text}`;
     downloadStatus.textContent = "Generating PDF...";
     downloadStatus.classList.add("visible");
 
+    if (state.selectedTemplate === "Modern Vanguard") {
+      downloadStatus.textContent = "Opening Print Dialog...";
+      downloadStatus.classList.add("visible");
+      renderHTMLResume(state.userData, state.selectedTemplate);
+      
+      // Wait for rendering to complete before opening print dialog
+      setTimeout(() => {
+        window.print();
+        btn.disabled = false;
+        downloadStatus.classList.remove("visible");
+        
+        if (!localStorage.getItem("cloak_reviewed")) {
+          setTimeout(() => {
+            $("#review-modal").classList.add("visible");
+          }, 2000);
+        }
+      }, 500);
+      return;
+    }
+
     try {
       const res = await fetch("/api/generate", {
         method: "POST",

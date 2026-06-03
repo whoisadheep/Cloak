@@ -1,0 +1,181 @@
+/* ============================================================
+   RESUME HTML TO PDF - PRINT STYLES
+   ============================================================ */
+
+#print-container {
+  display: none;
+  background: white;
+  width: 100%;
+  min-height: 100vh;
+}
+
+@media print {
+  @page {
+    margin: 0;
+    size: letter;
+  }
+
+  /* Hide everything except the print container */
+  body * {
+    visibility: hidden;
+  }
+  
+  body {
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  #print-container,
+  #print-container * {
+    visibility: visible;
+  }
+
+  #print-container {
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 8.5in;
+    margin: 0;
+    padding: 0;
+    background: white;
+  }
+}
+
+/* ============================================================
+   MODERN VANGUARD TEMPLATE STYLES
+   ============================================================ */
+
+.resume-vanguard {
+  font-family: 'Helvetica', 'Arial', sans-serif;
+  color: #1A332B; /* Deep Forest Green */
+  background: #F9F9F7;
+  padding: 0.8in 0.8in;
+  box-sizing: border-box;
+  line-height: 1.4;
+  width: 8.5in;
+  min-height: 11in;
+}
+
+/* 2-Column Grid Layout */
+.resume-vanguard .resume-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 0.4in;
+}
+
+/* Header */
+.resume-vanguard .header {
+  display: flex;
+  align-items: center;
+  gap: 0.25in;
+  margin-bottom: 0.4in;
+}
+
+.resume-vanguard .header-photo {
+  width: 1.2in;
+  height: 1.2in;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.resume-vanguard .header-content h1 {
+  font-size: 28pt;
+  font-weight: 700;
+  margin: 0 0 4pt 0;
+  color: #1A332B;
+  letter-spacing: -0.5px;
+}
+
+.resume-vanguard .header-content .tagline {
+  font-size: 11pt;
+  font-weight: 600;
+  font-style: italic;
+  color: #2D4C40;
+  margin: 0 0 6pt 0;
+}
+
+.resume-vanguard .header-content .contact-info {
+  font-size: 9pt;
+  color: #445D51;
+}
+
+.resume-vanguard .header-content .contact-info span {
+  margin-right: 12px;
+}
+
+/* Sections */
+.resume-vanguard .section {
+  margin-bottom: 0.3in;
+}
+
+.resume-vanguard .section-title {
+  font-size: 12pt;
+  font-weight: 700;
+  color: #1A332B;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 8pt;
+  border-bottom: 1.5px solid #A5C5B5;
+  padding-bottom: 4pt;
+}
+
+/* Entries */
+.resume-vanguard .entry {
+  margin-bottom: 12pt;
+}
+
+.resume-vanguard .entry-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 2pt;
+}
+
+.resume-vanguard .entry-title {
+  font-weight: 700;
+  font-size: 10pt;
+}
+
+.resume-vanguard .entry-date {
+  font-size: 9pt;
+  font-style: italic;
+  color: #445D51;
+}
+
+.resume-vanguard .entry-subtitle {
+  font-style: italic;
+  font-size: 10pt;
+  color: #2D4C40;
+  margin-bottom: 4pt;
+}
+
+.resume-vanguard .entry-body {
+  font-size: 9.5pt;
+  color: #2D4C40;
+}
+
+.resume-vanguard ul {
+  margin: 0;
+  padding-left: 14pt;
+}
+
+.resume-vanguard li {
+  margin-bottom: 4pt;
+}
+
+/* Right Column Specials */
+.resume-vanguard .skills-category {
+  margin-bottom: 8pt;
+}
+.resume-vanguard .skills-category-title {
+  font-weight: 700;
+  font-size: 9.5pt;
+  margin-bottom: 2pt;
+}
+.resume-vanguard .skills-list {
+  font-size: 9.5pt;
+  color: #2D4C40;
+  line-height: 1.3;
+}
