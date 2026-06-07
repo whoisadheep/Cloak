@@ -151,7 +151,7 @@ def chat():
         full_response = ""
         try:
             stream = client.models.generate_content_stream(
-                model="gemini-3.1-flash-lite",
+                model="gemini-2.5-flash",
                 contents=gemini_contents,
                 config={
                     "system_instruction": system_instruction,
@@ -482,7 +482,7 @@ Return the updated JSON now:"""
 
     try:
         response = client.models.generate_content(
-            model="gemini-3.1-flash-lite",
+            model="gemini-2.5-flash",
             contents=[{"role": "user", "parts": [{"text": tailor_prompt}]}],
             config={
                 "temperature": 0.4,
